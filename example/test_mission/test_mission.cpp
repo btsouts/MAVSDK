@@ -172,6 +172,19 @@ int main(int argc, char **argv)
     std::cout << "" << std::endl;
 
 
+    int num_waypoints;
+    std::cout << "Enter number of waypoints: ";
+    std::cin >> num_waypoints;
+    sleep_for(seconds(1));
+
+    std::cout << "Number of waypoints = " << num_waypoints << std::endl;
+
+//    for (int i = 0; i<num_waypoints; i++)
+//    {
+//        return 0;
+//    }
+
+    sleep_for(seconds(3));
 
     //Calculating mission plan
     std::vector<std::shared_ptr<MissionItem>> mission_items;
@@ -201,9 +214,9 @@ int main(int argc, char **argv)
 
 
     //Mission Waypoint A
-    lat_A = 47.398241338125118; //47.398241338125118
+    lat_A = 47.3977759; //47.398241338125118
     //lat_A_rad = ((lat_A / 180) * pi);
-    lon_A = 8.5455360114574432; //8.5455360114574432
+    lon_A = 8.5462028; //8.5455360114574432
     //lon_A_rad = ((lon_A / 180) * pi);
     altitude_A = 10;
 
@@ -221,9 +234,9 @@ int main(int argc, char **argv)
 
 
     //Mission Waypoint B
-    lat_B = 47.398001890458097; //47.398001890458097
+    lat_B = 47.3980161; //47.398001890458097
     //lat_B_rad = ((lat_B / 180) * pi);
-    lon_B = 8.5455576181411743; //8.5455576181411743
+    lon_B = 8.5453055; //8.5455576181411743
     //lon_B_rad = ((lon_B / 180) * pi);
     altitude_B = 10;
 
@@ -239,9 +252,9 @@ int main(int argc, char **argv)
     B.camera_action = MissionItem::CameraAction::NONE;
 
     //Mission Waypoint C
-    lat_C = 47.398058617228855; //47.398058617228855
+    lat_C = 47.3980003; //47.398058617228855
     //lat_C_rad = ((lat_C / 180) * pi);
-    lon_C = 8.5454618036746979; //8.5454618036746979
+    lon_C = 8.5459517; //8.5454618036746979
     //lon_C_rad = ((lon_C / 180) * pi);;
     altitude_C = 10;
 
@@ -359,9 +372,10 @@ int main(int argc, char **argv)
     }
 
 
-
-
-//    std::cout << "The best route is: " << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "The best route is: " << std::endl;
+    std::cout << array[0].name << std::endl;
+    std::cout << "" << std::endl;
 
 //    double route_array [] = {route_abc, route_acb, route_bac, route_bca, route_cab, route_cba};
 //    std::sort(route_array, route_array + SIZE);
@@ -374,109 +388,55 @@ int main(int argc, char **argv)
 //    std::cout << route_array[0] << "m" << std::endl;
 
 
+//    std::cout << "" << std::endl;
+//    std::cout << "Route dictionary: " << std::endl;
+//    std::cout << "" << std::endl;
 
+//    std::map<std::string, double> route_dictionary;
 
-    std::cout << "" << std::endl;
-    std::cout << "Route dictionary: " << std::endl;
-    std::cout << "" << std::endl;
-
-    std::map<std::string, double> route_dictionary;
-
-    route_dictionary["ABC"]=route_abc;
-    route_dictionary["ACB"]=route_acb;
-    route_dictionary["BAC"]=route_bac;
-    route_dictionary["BCA"]=route_bca;
-    route_dictionary["CAB"]=route_cab;
-    route_dictionary["CBA"]=route_cba;
+//    route_dictionary["ABC"]=route_abc;
+//    route_dictionary["ACB"]=route_acb;
+//    route_dictionary["BAC"]=route_bac;
+//    route_dictionary["BCA"]=route_bca;
+//    route_dictionary["CAB"]=route_cab;
+//    route_dictionary["CBA"]=route_cba;
 
     //std::cout << route_dictionary["ABC"] << "m" << std::endl;
 
-    std::cout << "" << std::endl;
 
-
-//    //Sort
-//    typedef std::function<bool(std::pair<std::string, double>, std::pair<std::string, double>)> Comparator;
-
-//    Comparator compFunctor =
-//                    [](std::pair<std::string, double> elem1 ,std::pair<std::string, double> elem2)
-//                    {
-//                            return elem1.second < elem2.second;
-//                    };
-
-
-//    // Declaring a set that will store the pairs using above comparision logic
-//    std::set<std::pair<std::string, double>, Comparator> setOfRoutes(
-//                    route_dictionary.begin(), route_dictionary.end(), compFunctor);
-
-//    // Iterate over a set using range base for loop
-//    // It will display the items in sorted order of values
-//    for (std::pair<std::string, double> element : setOfRoutes)
-//        std::cout << element.first << " : " << element.second << std::endl;
-
-
-
-
-
-
-    sleep_for(seconds(6000));
+    sleep_for(seconds(4));
 
 
     std::cout << "Creating and uploading mission" << std::endl;
 
 
-    mission_items.push_back(make_mission_item(47.398170327054473,
-                                              8.5456490218639658,
-                                              10.0f,
-                                              5.0f,
+    mission_items.push_back(make_mission_item(array[0].traj[0].lat,
+                                              array[0].traj[0].lon,
+                                              array[0].traj[0].altitude,
+                                              array[0].traj[0].speed,
                                               false,
                                               20.0f,
                                               60.0f,
                                               MissionItem::CameraAction::NONE));
 
-    mission_items.push_back(make_mission_item(47.398241338125118,
-                                              8.5455360114574432,
-                                              10.0f,
-                                              2.0f,
+    mission_items.push_back(make_mission_item(array[0].traj[1].lat,
+                                              array[0].traj[1].lon,
+                                              array[0].traj[1].altitude,
+                                              array[0].traj[1].speed,
                                               true,
                                               0.0f,
                                               -60.0f,
-                                              MissionItem::CameraAction::TAKE_PHOTO));
+                                              MissionItem::CameraAction::NONE));
 
-//    mission_items.push_back(make_mission_item(47.398139363821485,
-//                                              8.5453846156597137,
-//                                              10.0f,
-//                                              5.0f,
-//                                              true,
-//                                              -45.0f,
-//                                              0.0f,
-//                                              MissionItem::CameraAction::START_VIDEO));
-
-//    mission_items.push_back(make_mission_item(47.398058617228855,
-//                                              8.5454618036746979,
-//                                              10.0f,
-//                                              2.0f,
-//                                              false,
-//                                              -90.0f,
-//                                              30.0f,
-//                                              MissionItem::CameraAction::STOP_VIDEO));
-
-//    mission_items.push_back(make_mission_item(47.398100366082858,
-//                                              8.5456969141960144,
-//                                              10.0f,
-//                                              5.0f,
-//                                              false,
-//                                              -45.0f,
-//                                              -30.0f,
-//                                              MissionItem::CameraAction::START_PHOTO_INTERVAL));
-
-    mission_items.push_back(make_mission_item(47.398001890458097,
-                                              8.5455576181411743,
-                                              10.0f,
-                                              5.0f,
-                                              false,
+    mission_items.push_back(make_mission_item(array[0].traj[2].lat,
+                                              array[0].traj[2].lon,
+                                              array[0].traj[2].altitude,
+                                              array[0].traj[2].speed,
+                                              true,
+                                              -45.0f,
                                               0.0f,
-                                              0.0f,
-                                              MissionItem::CameraAction::STOP_PHOTO_INTERVAL));
+                                              MissionItem::CameraAction::NONE));
+
 
     {
         std::cout << "Uploading mission..." << std::endl;
@@ -526,13 +486,13 @@ int main(int argc, char **argv)
         handle_mission_err_exit(result, "Mission start failed: ");
     }
 
-    while (!want_to_pause) {
-        sleep_for(seconds(1));
-    }
+//    while (!want_to_pause) {
+//        sleep_for(seconds(1));
+//    }
 
-    {
-        auto prom = std::make_shared<std::promise<Mission::Result>>();
-        auto future_result = prom->get_future();
+//    {
+//        auto prom = std::make_shared<std::promise<Mission::Result>>();
+//        auto future_result = prom->get_future();
 
 //        std::cout << "Pausing mission..." << std::endl;
 //        mission->pause_mission_async([prom](Mission::Result result) { prom->set_value(result); });
@@ -544,27 +504,27 @@ int main(int argc, char **argv)
 //        } else {
 //            std::cout << "Mission paused." << std::endl;
 //        }
-    }
+//    }
 
     // Pause for 5 seconds.
     //sleep_for(seconds(5));
 
     // Then continue.
-    {
-        auto prom = std::make_shared<std::promise<Mission::Result>>();
-        auto future_result = prom->get_future();
+//    {
+//        auto prom = std::make_shared<std::promise<Mission::Result>>();
+//        auto future_result = prom->get_future();
 
-        std::cout << "Resuming mission..." << std::endl;
-        mission->start_mission_async([prom](Mission::Result result) { prom->set_value(result); });
+//        std::cout << "Resuming mission..." << std::endl;
+//        mission->start_mission_async([prom](Mission::Result result) { prom->set_value(result); });
 
-        const Mission::Result result = future_result.get();
-        if (result != Mission::Result::SUCCESS) {
-            std::cout << "Failed to resume mission (" << Mission::result_str(result) << ")"
-                      << std::endl;
-        } else {
-            std::cout << "Resumed mission." << std::endl;
-        }
-    }
+//        const Mission::Result result = future_result.get();
+//        if (result != Mission::Result::SUCCESS) {
+//            std::cout << "Failed to resume mission (" << Mission::result_str(result) << ")"
+//                      << std::endl;
+//        } else {
+//            std::cout << "Resumed mission." << std::endl;
+//        }
+//    }
 
     while (!mission->mission_finished()) {
         sleep_for(seconds(1));
