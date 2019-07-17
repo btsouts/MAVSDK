@@ -92,6 +92,27 @@ double distance(double alt1, double alt2, double lat1, double lat2, double lon1,
     return x;
 }
 
+typedef struct {
+    std::string name; //Char?
+    double lat;
+    double lon;
+    float altitude;
+    float speed;
+    bool fly_through;
+    float gimbal_pitch_deg;
+    float gimbal_yaw_deg;
+    mavsdk::MissionItem::CameraAction camera_action;
+}WAYPOINT;
+
+typedef struct {
+    std::string name; //Char?
+    double distance;
+    int num_waypoints;
+    WAYPOINT traj[3];
+}ROUTE;
+
+//Function Prototype
+void sortArray(ROUTE array[], int size);
 
 int main(int argc, char **argv)
 {
@@ -176,18 +197,6 @@ int main(int argc, char **argv)
     float gimbal_yaw_deg,
     MissionItem::CameraAction camera_action)*/
 
-    typedef struct {
-        std::string name; //Char?
-        double lat;
-        double lon;
-        float altitude;
-        float speed;
-        bool fly_through;
-        float gimbal_pitch_deg;
-        float gimbal_yaw_deg;
-        mavsdk::MissionItem::CameraAction camera_action;
-    }WAYPOINT;
-
     float speed = 5;
 
 
@@ -197,6 +206,7 @@ int main(int argc, char **argv)
     lon_A = 8.5455360114574432; //8.5455360114574432
     //lon_A_rad = ((lon_A / 180) * pi);
     altitude_A = 10;
+
 
     WAYPOINT A;
     A.name = "A";
@@ -274,12 +284,23 @@ int main(int argc, char **argv)
     double route_cab = distance_takeoff_c + distance_a_c + distance_a_b + distance_takeoff_b;
     double route_cba = distance_takeoff_c + distance_b_c + distance_a_b + distance_takeoff_a;
 
-    typedef struct {
-        std::string name; //Char?
-        double distance;
-        int num_waypoints;
-        WAYPOINT traj[3];
-    }ROUTE;
+
+    std::cout << "" << std::endl;
+    std::cout << "Route distance calculations: " << std::endl;
+    std::cout << "" << std::endl;
+
+    std::cout << "Route ABC is: " << route_abc << "m" << std::endl;
+    std::cout << "Route ACB is: " << route_acb << "m" << std::endl;
+    std::cout << "Route BAC is: " << route_bac << "m" << std::endl;
+    std::cout << "Route BCA is: " << route_bca << "m" << std::endl; //This is a repeat
+    std::cout << "Route CAB is: " << route_cab << "m" << std::endl; //This is a repeat
+    std::cout << "Route CBA is: " << route_cba << "m" << std::endl; //This is a repeat
+    //const int SIZE = 6;
+
+    std::cout << "" << std::endl;
+
+    std::cout << "Sorted List:" << std::endl;
+    std::cout << "" << std::endl;
 
     ROUTE ABC;
     ABC.name = "ABC";
@@ -297,6 +318,13 @@ int main(int argc, char **argv)
     ACB.traj[1] = C;
     ACB.traj[2] = B;
 
+    ROUTE BAC;
+    BAC.name = "BAC";
+    BAC.distance = route_bac;
+    BAC.num_waypoints = 3;
+    BAC.traj[0] = B;
+    BAC.traj[1] = A;
+    BAC.traj[2] = C;
 
 
     const int SIZE = 3;
@@ -313,6 +341,12 @@ int main(int argc, char **argv)
     array[1].traj[0] = ACB.traj[0];
     array[1].traj[1] = ACB.traj[1];
     array[1].traj[2] = ACB.traj[2];
+    array[2].name = BAC.name;
+    array[2].distance = route_bac;
+    array[2].num_waypoints = BAC.num_waypoints;
+    array[2].traj[0] = BAC.traj[0];
+    array[2].traj[1] = BAC.traj[1];
+    array[2].traj[2] = BAC.traj[2];
 
 
 
@@ -324,22 +358,6 @@ int main(int argc, char **argv)
         std::cout << array[i].name << std::endl;
     }
 
-
-
-
-    std::cout << "" << std::endl;
-    std::cout << "Route distance calculations: " << std::endl;
-    std::cout << "" << std::endl;
-
-    std::cout << "Route ABC is: " << route_abc << "m" << std::endl;
-    std::cout << "Route ACB is: " << route_acb << "m" << std::endl;
-    std::cout << "Route BAC is: " << route_bac << "m" << std::endl;
-    std::cout << "Route BCA is: " << route_bca << "m" << std::endl; //This is a repeat
-    std::cout << "Route CAB is: " << route_cab << "m" << std::endl; //This is a repeat
-    std::cout << "Route CBA is: " << route_cba << "m" << std::endl; //This is a repeat
-    //const int SIZE = 6;
-
-    std::cout << "" << std::endl;
 
 
 
@@ -358,7 +376,7 @@ int main(int argc, char **argv)
 
 
 
-
+    std::cout << "" << std::endl;
     std::cout << "Route dictionary: " << std::endl;
     std::cout << "" << std::endl;
 
@@ -621,7 +639,6 @@ inline void handle_connection_err_exit(ConnectionResult result, const std::strin
     }
 }
 
-
 void sortArray(ROUTE array[], int size)
 {
     bool swapped;
@@ -633,7 +650,7 @@ void sortArray(ROUTE array[], int size)
         {
             if (array[count].distance > array[count + 1].distance)
             {
-                swap(array[count], array[count+1]);
+                std::swap(array[count], array[count+1]);
                 swapped = true;
             }
         }
