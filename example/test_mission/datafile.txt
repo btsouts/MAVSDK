@@ -1,0 +1,7 @@
+num_waypoints = 6;
+Waypoint name, latitude, longitude, altitude;
+Waypoint name, latitude, longitude, altitude;
+Waypoint name, latitude, longitude, altitude;
+Waypoint name, latitude, longitude, altitude;
+Waypoint name, latitude, longitude, altitude;
+Waypoint name, latitude, longitude, altitude;
