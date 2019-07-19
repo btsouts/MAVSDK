@@ -111,9 +111,6 @@ typedef struct {
 
 WAYPOINT route_array[num_waypoints+1];
 
-//Function Prototype
-void sortArray(ROUTE array[], int size);
-
 
 //Finds the nearest neighbour that hasn't been visited
 int least(int p){
@@ -451,22 +448,4 @@ inline void handle_connection_err_exit(ConnectionResult result, const std::strin
                   << NORMAL_CONSOLE_TEXT << std::endl;
         exit(EXIT_FAILURE);
     }
-}
-
-void sortArray(ROUTE array[], int size)
-{
-    bool swapped;
-
-    do
-    {
-        swapped = false;
-        for (int count = 0; count < (size - 1); count++)
-        {
-            if (array[count].distance > array[count + 1].distance)
-            {
-                std::swap(array[count], array[count+1]);
-                swapped = true;
-            }
-        }
-    } while (swapped);
 }
