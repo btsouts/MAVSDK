@@ -109,23 +109,7 @@ typedef struct {
     float speed;
 }WAYPOINT;
 
-typedef struct {
-    int identifier; //Char?
-    double distance;
-    int num_waypoints;
-    WAYPOINT traj[3];
-}ROUTE;
-
 WAYPOINT route_array[num_waypoints+1];
-
-
-/*  CONNECT TO THE DRONE  */
-
-
-
-
-
-
 
 //Function Prototype
 void sortArray(ROUTE array[], int size);
@@ -232,98 +216,14 @@ int main(int argc, char **argv)
     std::cout << "System ready" << std::endl;
     std::cout << "" << std::endl;
 
-//    //Get number of waypoints from user
-//    int num_waypoints;
-//    std::cout << "Enter number of waypoints: ";
-//    std::cin >> num_waypoints;
-//    std::cout << "Number of waypoints = " << num_waypoints << std::endl;
-
-//    //Get speed from user
-//    float speed;
-//    std::cout << "Enter speed: ";
-//    std::cin >> speed;
-
-//    //Declare a list of waypoints to work with
-//    WAYPOINT A, B, C, D, E, F, G, H, I, J, K;
-//    WAYPOINT waypoint_array[] = {A, B, C, D, E, F, G, H, I, J, K};
-
-
-//    //Receive waypoint data from a file
-//    std::ofstream outFile;
-//    outFile.open("/home/joestory/Downloads/MAVSDK/example/test_mission/datafile.txt");
-//    if (!outFile) {
-//        std::cout << "Unable to open file datafile.txt when writing" << std::endl;
-//        exit(1);   // call system to stop
-//    }
-//    outFile << "num_waypoints = " << num_waypoints << ";\n";
-//    for (int i = 0; i < num_waypoints; i++)
-//    {
-//        outFile << "Waypoint name, latitude, longitude, altitude;\n";
-//    }
-//    outFile.close();
-
-//    std::ifstream inFile;
-//    std::string line;
-//    inFile.open("/home/joestory/Downloads/MAVSDK/example/test_mission/datafile.txt");
-//    if (!inFile) {
-//        std::cout << "Unable to open file datafile.txt when reading" << std::endl;
-//        exit(1);   // call system to stop
-//    }
-
-//    while (getline(inFile, line))
-//    {
-//        std::cout << line << std::endl;
-//    }
-
-//    inFile.close();
-
-//    while ( getline (inFile,line) )
-//    {
-//        std::cout << line << '\n';
-//    }
-
-
-
-
-    //Receive waypoint data from the user
-//    for (int i = 0; i<num_waypoints; i++)
-//    {
-//        double lat_temp, lon_temp, alt_temp;
-//        std::cout << "Enter latitude: ";
-//        std::cin >> lat_temp;
-//        std::cout << "Enter longitude: ";
-//        std::cin >> lon_temp;
-//        std::cout << "Enter altitude: ";
-//        std::cin >> alt_temp;
-
-//        waypoint_array[i].name = "ABCDEFGHIJK";
-//        waypoint_array[i].lat = lat_temp;
-//        waypoint_array[i].lon = lon_temp;
-//        waypoint_array[i].altitude = alt_temp;
-//        waypoint_array[i].speed = speed;
-//        waypoint_array[i].fly_through = true;
-//        waypoint_array[i].gimbal_pitch_deg = 0;
-//        waypoint_array[i].gimbal_yaw_deg = 0;
-//        waypoint_array[i].camera_action = MissionItem::CameraAction::NONE;
-
-//    }
-
     sleep_for(seconds(1));
+
+
 
     //Calculating mission plan
     std::vector<std::shared_ptr<MissionItem>> mission_items;
-
     std::cout << "Calculating best flight path:" << std::endl;
     std::cout << "" << std::endl;
-
-//    //Takeoff Location
-//    lat_takeoff = telemetry->position().latitude_deg;
-//    //lat_takeoff_rad = ((lat_takeoff / 180) * pi);
-//    lon_takeoff = telemetry->position().longitude_deg;
-//    //lon_takeoff_rad = ((lon_takeoff / 180) * pi);
-//    altitude_absolute_takeoff = telemetry->position().absolute_altitude_m;
-
-//    std::cout << "Takeoff position is: " << lat_takeoff << ", " << lon_takeoff << ", " << altitude_absolute_takeoff << std::endl;
 
     /*(double latitude_deg,
     double longitude_deg,
@@ -377,11 +277,8 @@ int main(int argc, char **argv)
     D.lon = 8.545701;
     D.altitude = 10;
 
-
-
     //Declare a list of waypoints to work with
     WAYPOINT waypoint_array[num_waypoints+1] = {TAKEOFF, A, B, C, D};
-
 
     //Calculate the 2D distance array (spherical polar coordinates)
     for (int i = 0; i < num_waypoints+1; i++){
@@ -395,9 +292,6 @@ int main(int argc, char **argv)
 
     //List the final waypoint as the start
     route_array[num_waypoints+1] = waypoint_array[0];
-
-
-
 
     std::cout << "\n\nMinimum cost is " << cost << std::endl;
     std::cout << "" << std::endl;
@@ -421,110 +315,10 @@ int main(int argc, char **argv)
         std::cout << (route_array[i].identifier) << "," << std::endl;
     }
 
-//    double distance_a_b = distance(A.altitude, C.altitude, A.lat, C.lat, A.lon, C.lon);
-//    double distance_a_c = distance(A.altitude, C.altitude, A.lat, C.lat, A.lon, C.lon);
-//    double distance_b_c = distance(B.altitude, C.altitude, B.lat, C.lat, B.lon, C.lon);
-//    double distance_takeoff_a = distance(altitude_absolute_takeoff, altitude_A, lat_takeoff, lat_A, lon_takeoff, lon_A);
-//    double distance_takeoff_b = distance(altitude_absolute_takeoff, altitude_B, lat_takeoff, lat_B, lon_takeoff, lon_B);
-//    double distance_takeoff_c = distance(altitude_absolute_takeoff, altitude_C, lat_takeoff, lat_C, lon_takeoff, lon_C);
 
-//    std::cout << "Distance A to B is: " << distance_a_b << "m" << std::endl;
-//    std::cout << "Distance A to C is: " << distance_a_c << "m" << std::endl;
-//    std::cout << "Distance B to C is: " << distance_b_c << "m" << std::endl;
-//    std::cout << "Distance Takeoff to A is: " << distance_takeoff_a << "m" << std::endl;
-//    std::cout << "Distance Takeoff to B is: " << distance_takeoff_b << "m" << std::endl;
-//    std::cout << "Distance Takeoff to C is: " << distance_takeoff_c << "m" << std::endl;
+    sleep_for(seconds(2));
 
-
-//    double route_abc = distance_takeoff_a + distance_a_b + distance_b_c + distance_takeoff_c;
-//    double route_acb = distance_takeoff_a + distance_a_c + distance_b_c + distance_takeoff_b;
-//    double route_bac = distance_takeoff_b + distance_a_b + distance_a_c + distance_takeoff_c;
-//    double route_bca = distance_takeoff_b + distance_b_c + distance_a_c + distance_takeoff_a;
-//    double route_cab = distance_takeoff_c + distance_a_c + distance_a_b + distance_takeoff_b;
-//    double route_cba = distance_takeoff_c + distance_b_c + distance_a_b + distance_takeoff_a;
-
-
-//    std::cout << "" << std::endl;
-//    std::cout << "Route distance calculations: " << std::endl;
-//    std::cout << "" << std::endl;
-
-//    std::cout << "Route ABC is: " << route_abc << "m" << std::endl;
-//    std::cout << "Route ACB is: " << route_acb << "m" << std::endl;
-//    std::cout << "Route BAC is: " << route_bac << "m" << std::endl;
-//    std::cout << "Route BCA is: " << route_bca << "m" << std::endl; //This is a repeat
-//    std::cout << "Route CAB is: " << route_cab << "m" << std::endl; //This is a repeat
-//    std::cout << "Route CBA is: " << route_cba << "m" << std::endl; //This is a repeat
-//    //const int SIZE = 6;
-
-//    std::cout << "" << std::endl;
-
-//    std::cout << "Sorted List:" << std::endl;
-//    std::cout << "" << std::endl;
-
-//    ROUTE ABC;
-//    ABC.identifier = 38;
-//    ABC.distance = route_abc;
-//    ABC.num_waypoints = 3;
-//    ABC.traj[0] = A;
-//    ABC.traj[1] = B;
-//    ABC.traj[2] = C;
-
-
-//    const int SIZE = 1;
-//    ROUTE array[SIZE];
-//    array[0].identifier = ABC.identifier;
-//    array[0].distance = ABC.distance;
-//    array[0].num_waypoints = ABC.num_waypoints;
-//    array[0].traj[0] = ABC.traj[0];
-//    array[0].traj[1] = ABC.traj[1];
-//    array[0].traj[2] = ABC.traj[2];
-
-
-
-//    sortArray(array, SIZE);
-
-
-//    for (int i = 0; i < SIZE; i++)
-//    {
-//        std::cout << array[i].identifier << std::endl;
-//    }
-
-
-//    std::cout << "" << std::endl;
-//    std::cout << "The best route is: " << std::endl;
-//    std::cout << array[0].identifier << std::endl;
-//    std::cout << "" << std::endl;
-
-//    double route_array [] = {route_abc, route_acb, route_bac, route_bca, route_cab, route_cba};
-//    std::sort(route_array, route_array + SIZE);
-
-//    for(int i=0; i < SIZE; i++)
-//    {
-//        std::cout << route_array[i] << std::endl;
-//    }
-
-//    std::cout << route_array[0] << "m" << std::endl;
-
-
-//    std::cout << "" << std::endl;
-//    std::cout << "Route dictionary: " << std::endl;
-//    std::cout << "" << std::endl;
-
-//    std::map<std::string, double> route_dictionary;
-
-//    route_dictionary["ABC"]=route_abc;
-//    route_dictionary["ACB"]=route_acb;
-//    route_dictionary["BAC"]=route_bac;
-//    route_dictionary["BCA"]=route_bca;
-//    route_dictionary["CAB"]=route_cab;
-//    route_dictionary["CBA"]=route_cba;
-
-    //std::cout << route_dictionary["ABC"] << "m" << std::endl;
-
-
-    sleep_for(seconds(4));
-
-
+    //Upload the mission plan using the route_array that was created by the mincost function
     std::cout << "Creating and uploading mission" << std::endl;
 
     for (int x = 1; x<num_waypoints+1; x++){
@@ -537,10 +331,6 @@ int main(int argc, char **argv)
                                                   60.0f,
                                                   MissionItem::CameraAction::NONE));
     }
-
-
-
-
 
     {
         std::cout << "Uploading mission..." << std::endl;
@@ -589,46 +379,6 @@ int main(int argc, char **argv)
         const Mission::Result result = future_result.get();
         handle_mission_err_exit(result, "Mission start failed: ");
     }
-
-//    while (!want_to_pause) {
-//        sleep_for(seconds(1));
-//    }
-
-//    {
-//        auto prom = std::make_shared<std::promise<Mission::Result>>();
-//        auto future_result = prom->get_future();
-
-//        std::cout << "Pausing mission..." << std::endl;
-//        mission->pause_mission_async([prom](Mission::Result result) { prom->set_value(result); });
-
-//        const Mission::Result result = future_result.get();
-//        if (result != Mission::Result::SUCCESS) {
-//            std::cout << "Failed to pause mission (" << Mission::result_str(result) << ")"
-//                      << std::endl;
-//        } else {
-//            std::cout << "Mission paused." << std::endl;
-//        }
-//    }
-
-    // Pause for 5 seconds.
-    //sleep_for(seconds(5));
-
-    // Then continue.
-//    {
-//        auto prom = std::make_shared<std::promise<Mission::Result>>();
-//        auto future_result = prom->get_future();
-
-//        std::cout << "Resuming mission..." << std::endl;
-//        mission->start_mission_async([prom](Mission::Result result) { prom->set_value(result); });
-
-//        const Mission::Result result = future_result.get();
-//        if (result != Mission::Result::SUCCESS) {
-//            std::cout << "Failed to resume mission (" << Mission::result_str(result) << ")"
-//                      << std::endl;
-//        } else {
-//            std::cout << "Resumed mission." << std::endl;
-//        }
-//    }
 
     while (!mission->mission_finished()) {
         sleep_for(seconds(1));
@@ -720,4 +470,3 @@ void sortArray(ROUTE array[], int size)
         }
     } while (swapped);
 }
-
