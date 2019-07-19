@@ -29,6 +29,7 @@
 #include <string>
 #include <set>
 #include <functional>
+#include <fstream>
 
 #define ERROR_CONSOLE_TEXT "\033[31m" // Turn text on console red
 #define TELEMETRY_CONSOLE_TEXT "\033[34m" // Turn text on console blue
@@ -53,6 +54,14 @@ double lon_takeoff;
 float altitude_absolute_takeoff;
 double earth_radius = 6371000; //metres;
 const double pi = 3.1415926535897;
+
+//Cost function variables
+double cost = 0; //Should be double
+int n=0;
+const int num_waypoints = 4;
+double cost_array[(num_waypoints+1)][(num_waypoints+1)]; //Should be double
+
+int completed[num_waypoints+1] = {0};
 
 // Handles Action's result
 inline void handle_action_err_exit(Action::Result result, const std::string &message);
@@ -93,26 +102,78 @@ double distance(double alt1, double alt2, double lat1, double lat2, double lon1,
 }
 
 typedef struct {
-    std::string name; //Char?
+    int identifier;
     double lat;
     double lon;
     float altitude;
     float speed;
-    bool fly_through;
-    float gimbal_pitch_deg;
-    float gimbal_yaw_deg;
-    mavsdk::MissionItem::CameraAction camera_action;
 }WAYPOINT;
 
 typedef struct {
-    std::string name; //Char?
+    int identifier; //Char?
     double distance;
     int num_waypoints;
     WAYPOINT traj[3];
 }ROUTE;
 
+WAYPOINT route_array[num_waypoints+1];
+
+
+/*  CONNECT TO THE DRONE  */
+
+
+
+
+
+
+
 //Function Prototype
 void sortArray(ROUTE array[], int size);
+
+
+//Finds the nearest neighbour that hasn't been visited
+int least(int p){
+    int i,np=999;
+    int min=999,kmin;
+
+    for (i=0;i<num_waypoints+1;i++){
+        if((cost_array[p][i]!=0)&&(completed[i]==0)){
+            if(cost_array[p][i]+cost_array[i][p] < min){
+                min = cost_array[i][0]+cost_array[p][i];
+                kmin=cost_array[p][i];
+                np=i;
+            }
+        }
+    }
+    if(min!=999){
+        cost+=kmin;
+    }
+    return np;
+}
+
+//Finds the minimum cost route using the nearest neighbour algorithm
+void mincost(int position, WAYPOINT array[num_waypoints+1]){
+    int nposition;
+
+    completed[position]=1;
+
+    std::cout << position+1 << "--->";
+
+    route_array[n] = array[position];
+    n++;
+
+    nposition = least(position);
+
+    if(nposition==999){
+        nposition=0;
+        std::cout << nposition+1;
+        cost+=cost_array[position][nposition];
+        return;
+    }
+    mincost(nposition, array);
+
+}
+
 
 int main(int argc, char **argv)
 {
@@ -171,20 +232,83 @@ int main(int argc, char **argv)
     std::cout << "System ready" << std::endl;
     std::cout << "" << std::endl;
 
+//    //Get number of waypoints from user
+//    int num_waypoints;
+//    std::cout << "Enter number of waypoints: ";
+//    std::cin >> num_waypoints;
+//    std::cout << "Number of waypoints = " << num_waypoints << std::endl;
 
-    int num_waypoints;
-    std::cout << "Enter number of waypoints: ";
-    std::cin >> num_waypoints;
-    sleep_for(seconds(1));
+//    //Get speed from user
+//    float speed;
+//    std::cout << "Enter speed: ";
+//    std::cin >> speed;
 
-    std::cout << "Number of waypoints = " << num_waypoints << std::endl;
+//    //Declare a list of waypoints to work with
+//    WAYPOINT A, B, C, D, E, F, G, H, I, J, K;
+//    WAYPOINT waypoint_array[] = {A, B, C, D, E, F, G, H, I, J, K};
 
-//    for (int i = 0; i<num_waypoints; i++)
+
+//    //Receive waypoint data from a file
+//    std::ofstream outFile;
+//    outFile.open("/home/joestory/Downloads/MAVSDK/example/test_mission/datafile.txt");
+//    if (!outFile) {
+//        std::cout << "Unable to open file datafile.txt when writing" << std::endl;
+//        exit(1);   // call system to stop
+//    }
+//    outFile << "num_waypoints = " << num_waypoints << ";\n";
+//    for (int i = 0; i < num_waypoints; i++)
 //    {
-//        return 0;
+//        outFile << "Waypoint name, latitude, longitude, altitude;\n";
+//    }
+//    outFile.close();
+
+//    std::ifstream inFile;
+//    std::string line;
+//    inFile.open("/home/joestory/Downloads/MAVSDK/example/test_mission/datafile.txt");
+//    if (!inFile) {
+//        std::cout << "Unable to open file datafile.txt when reading" << std::endl;
+//        exit(1);   // call system to stop
 //    }
 
-    sleep_for(seconds(3));
+//    while (getline(inFile, line))
+//    {
+//        std::cout << line << std::endl;
+//    }
+
+//    inFile.close();
+
+//    while ( getline (inFile,line) )
+//    {
+//        std::cout << line << '\n';
+//    }
+
+
+
+
+    //Receive waypoint data from the user
+//    for (int i = 0; i<num_waypoints; i++)
+//    {
+//        double lat_temp, lon_temp, alt_temp;
+//        std::cout << "Enter latitude: ";
+//        std::cin >> lat_temp;
+//        std::cout << "Enter longitude: ";
+//        std::cin >> lon_temp;
+//        std::cout << "Enter altitude: ";
+//        std::cin >> alt_temp;
+
+//        waypoint_array[i].name = "ABCDEFGHIJK";
+//        waypoint_array[i].lat = lat_temp;
+//        waypoint_array[i].lon = lon_temp;
+//        waypoint_array[i].altitude = alt_temp;
+//        waypoint_array[i].speed = speed;
+//        waypoint_array[i].fly_through = true;
+//        waypoint_array[i].gimbal_pitch_deg = 0;
+//        waypoint_array[i].gimbal_yaw_deg = 0;
+//        waypoint_array[i].camera_action = MissionItem::CameraAction::NONE;
+
+//    }
+
+    sleep_for(seconds(1));
 
     //Calculating mission plan
     std::vector<std::shared_ptr<MissionItem>> mission_items;
@@ -192,14 +316,14 @@ int main(int argc, char **argv)
     std::cout << "Calculating best flight path:" << std::endl;
     std::cout << "" << std::endl;
 
-    //Takeoff Location
-    lat_takeoff = telemetry->position().latitude_deg;
-    //lat_takeoff_rad = ((lat_takeoff / 180) * pi);
-    lon_takeoff = telemetry->position().longitude_deg;
-    //lon_takeoff_rad = ((lon_takeoff / 180) * pi);
-    altitude_absolute_takeoff = telemetry->position().absolute_altitude_m;
+//    //Takeoff Location
+//    lat_takeoff = telemetry->position().latitude_deg;
+//    //lat_takeoff_rad = ((lat_takeoff / 180) * pi);
+//    lon_takeoff = telemetry->position().longitude_deg;
+//    //lon_takeoff_rad = ((lon_takeoff / 180) * pi);
+//    altitude_absolute_takeoff = telemetry->position().absolute_altitude_m;
 
-    std::cout << "Takeoff position is: " << lat_takeoff << ", " << lon_takeoff << ", " << altitude_absolute_takeoff << std::endl;
+//    std::cout << "Takeoff position is: " << lat_takeoff << ", " << lon_takeoff << ", " << altitude_absolute_takeoff << std::endl;
 
     /*(double latitude_deg,
     double longitude_deg,
@@ -210,172 +334,166 @@ int main(int argc, char **argv)
     float gimbal_yaw_deg,
     MissionItem::CameraAction camera_action)*/
 
-    float speed = 5;
 
+    //Calculate takeoff position
+    lat_takeoff = telemetry->position().latitude_deg;
+    lon_takeoff = telemetry->position().longitude_deg;
+    altitude_absolute_takeoff = telemetry->position().absolute_altitude_m;
+
+    float speed = 5.0f;
+
+    //Takeoff Waypoint
+    WAYPOINT TAKEOFF;
+    TAKEOFF.identifier = 1;
+    TAKEOFF.lat = lat_takeoff;
+    TAKEOFF.lon = lon_takeoff;
+    TAKEOFF.altitude = altitude_absolute_takeoff;
 
     //Mission Waypoint A
-    lat_A = 47.3977759; //47.398241338125118
-    //lat_A_rad = ((lat_A / 180) * pi);
-    lon_A = 8.5462028; //8.5455360114574432
-    //lon_A_rad = ((lon_A / 180) * pi);
-    altitude_A = 10;
-
-
     WAYPOINT A;
-    A.name = "A";
-    A.lat = lat_A;
-    A.lon = lon_A;
-    A.altitude = altitude_A;
-    A.speed = speed;
-    A.fly_through = true;
-    A.gimbal_pitch_deg = 0;
-    A.gimbal_yaw_deg = 0;
-    A.camera_action = MissionItem::CameraAction::NONE;
-
+    A.identifier = 2;
+    A.lat = 47.3977759; //47.398241338125118
+    A.lon = 8.5462028; //8.5455360114574432
+    A.altitude = 10.0f;
 
     //Mission Waypoint B
-    lat_B = 47.3980161; //47.398001890458097
-    //lat_B_rad = ((lat_B / 180) * pi);
-    lon_B = 8.5453055; //8.5455576181411743
-    //lon_B_rad = ((lon_B / 180) * pi);
-    altitude_B = 10;
-
     WAYPOINT B;
-    B.name = "B";
-    B.lat = lat_B;
-    B.lon = lon_B;
-    B.altitude = altitude_B;
-    B.speed = speed;
-    B.fly_through = true;
-    B.gimbal_pitch_deg = 0;
-    B.gimbal_yaw_deg = 0;
-    B.camera_action = MissionItem::CameraAction::NONE;
+    B.identifier = 3;
+    B.lat = 47.3980161; //47.398001890458097
+    B.lon = 8.5453055; //8.5455576181411743
+    B.altitude = 10.0f;
 
     //Mission Waypoint C
-    lat_C = 47.3980003; //47.398058617228855
-    //lat_C_rad = ((lat_C / 180) * pi);
-    lon_C = 8.5459517; //8.5454618036746979
-    //lon_C_rad = ((lon_C / 180) * pi);;
-    altitude_C = 10;
-
     WAYPOINT C;
-    C.name = "C";
-    C.lat = lat_C;
-    C.lon = lon_C;
-    C.altitude = altitude_C;
-    C.speed = speed;
-    C.fly_through = true;
-    C.gimbal_pitch_deg = 0;
-    C.gimbal_yaw_deg = 0;
-    C.camera_action = MissionItem::CameraAction::NONE;
+    C.identifier = 4;
+    C.lat = 47.3980003; //47.398058617228855
+    C.lon = 8.5459517; //8.5454618036746979
+    C.altitude = 10.0f;
 
-    sleep_for(seconds(1));
-
-    //Haversine Formula
-    //distance_a_b = (2*earth_radius)*( asin ( sqrt(   pow((sin((lat_B_rad-lat_A_rad)/2)), 2) + cos(lat_A_rad)*cos(lat_B_rad)*pow(sin((lon_B_rad-lon_A_rad)/2), 2)    )));
-
-    //Spherical Polar Coordinates
-    double distance_a_b = distance(A.altitude, B.altitude, A.lat, B.lat, A.lon, B.lon);
-    double distance_a_c = distance(A.altitude, C.altitude, A.lat, C.lat, A.lon, C.lon);
-    double distance_b_c = distance(B.altitude, C.altitude, B.lat, C.lat, B.lon, C.lon);
-    double distance_takeoff_a = distance(altitude_absolute_takeoff, altitude_A, lat_takeoff, lat_A, lon_takeoff, lon_A);
-    double distance_takeoff_b = distance(altitude_absolute_takeoff, altitude_B, lat_takeoff, lat_B, lon_takeoff, lon_B);
-    double distance_takeoff_c = distance(altitude_absolute_takeoff, altitude_C, lat_takeoff, lat_C, lon_takeoff, lon_C);
-
-    std::cout << "Distance A to B is: " << distance_a_b << "m" << std::endl;
-    std::cout << "Distance A to C is: " << distance_a_c << "m" << std::endl;
-    std::cout << "Distance B to C is: " << distance_b_c << "m" << std::endl;
-    std::cout << "Distance Takeoff to A is: " << distance_takeoff_a << "m" << std::endl;
-    std::cout << "Distance Takeoff to B is: " << distance_takeoff_b << "m" << std::endl;
-    std::cout << "Distance Takeoff to C is: " << distance_takeoff_c << "m" << std::endl;
-
-
-    double route_abc = distance_takeoff_a + distance_a_b + distance_b_c + distance_takeoff_c;
-    double route_acb = distance_takeoff_a + distance_a_c + distance_b_c + distance_takeoff_b;
-    double route_bac = distance_takeoff_b + distance_a_b + distance_a_c + distance_takeoff_c;
-    double route_bca = distance_takeoff_b + distance_b_c + distance_a_c + distance_takeoff_a;
-    double route_cab = distance_takeoff_c + distance_a_c + distance_a_b + distance_takeoff_b;
-    double route_cba = distance_takeoff_c + distance_b_c + distance_a_b + distance_takeoff_a;
-
-
-    std::cout << "" << std::endl;
-    std::cout << "Route distance calculations: " << std::endl;
-    std::cout << "" << std::endl;
-
-    std::cout << "Route ABC is: " << route_abc << "m" << std::endl;
-    std::cout << "Route ACB is: " << route_acb << "m" << std::endl;
-    std::cout << "Route BAC is: " << route_bac << "m" << std::endl;
-    std::cout << "Route BCA is: " << route_bca << "m" << std::endl; //This is a repeat
-    std::cout << "Route CAB is: " << route_cab << "m" << std::endl; //This is a repeat
-    std::cout << "Route CBA is: " << route_cba << "m" << std::endl; //This is a repeat
-    //const int SIZE = 6;
-
-    std::cout << "" << std::endl;
-
-    std::cout << "Sorted List:" << std::endl;
-    std::cout << "" << std::endl;
-
-    ROUTE ABC;
-    ABC.name = "ABC";
-    ABC.distance = route_abc;
-    ABC.num_waypoints = 3;
-    ABC.traj[0] = A;
-    ABC.traj[1] = B;
-    ABC.traj[2] = C;
-
-    ROUTE ACB;
-    ACB.name = "ACB";
-    ACB.distance = route_acb;
-    ACB.num_waypoints = 3;
-    ACB.traj[0] = A;
-    ACB.traj[1] = C;
-    ACB.traj[2] = B;
-
-    ROUTE BAC;
-    BAC.name = "BAC";
-    BAC.distance = route_bac;
-    BAC.num_waypoints = 3;
-    BAC.traj[0] = B;
-    BAC.traj[1] = A;
-    BAC.traj[2] = C;
-
-
-    const int SIZE = 3;
-    ROUTE array[SIZE];
-    array[0].name = ABC.name;
-    array[0].distance = ABC.distance;
-    array[0].num_waypoints = ABC.num_waypoints;
-    array[0].traj[0] = ABC.traj[0];
-    array[0].traj[1] = ABC.traj[1];
-    array[0].traj[2] = ABC.traj[2];
-    array[1].name = ACB.name;
-    array[1].distance = ACB.distance;
-    array[1].num_waypoints = ACB.num_waypoints;
-    array[1].traj[0] = ACB.traj[0];
-    array[1].traj[1] = ACB.traj[1];
-    array[1].traj[2] = ACB.traj[2];
-    array[2].name = BAC.name;
-    array[2].distance = route_bac;
-    array[2].num_waypoints = BAC.num_waypoints;
-    array[2].traj[0] = BAC.traj[0];
-    array[2].traj[1] = BAC.traj[1];
-    array[2].traj[2] = BAC.traj[2];
+    //Mission Waypoint D
+    WAYPOINT D;
+    D.identifier = 5;
+    D.lat = 47.398008;
+    D.lon = 8.545701;
+    D.altitude = 10;
 
 
 
-    sortArray(array, SIZE);
+    //Declare a list of waypoints to work with
+    WAYPOINT waypoint_array[num_waypoints+1] = {TAKEOFF, A, B, C, D};
 
 
-    for (int i = 0; i < SIZE; i++)
-    {
-        std::cout << array[i].name << std::endl;
+    //Calculate the 2D distance array (spherical polar coordinates)
+    for (int i = 0; i < num_waypoints+1; i++){
+        for (int t = 0; t < num_waypoints+1; t++){
+            cost_array[i][t] = distance(waypoint_array[i].altitude, waypoint_array[t].altitude, waypoint_array[i].lat, waypoint_array[t].lat, waypoint_array[i].lon, waypoint_array[t].lon);
+        }
     }
 
+    //route_array[0] = TAKEOFF;
+    mincost(0, waypoint_array);
+
+    //List the final waypoint as the start
+    route_array[num_waypoints+1] = waypoint_array[0];
+
+
+
+
+    std::cout << "\n\nMinimum cost is " << cost << std::endl;
+    std::cout << "" << std::endl;
+
+    //Print the 2D distance array
+    std::cout << "2D Distance Array:" << std::endl;
+    std::cout << "" << std::endl;
+    for (int i = 0; i < num_waypoints+1; i++){
+        std::cout << "[";
+        for (int t = 0; t < num_waypoints+1; t++){
+            std::cout << cost_array[i][t] << ",  ";
+        }
+        std::cout << "]" << std::endl;
+    }
 
     std::cout << "" << std::endl;
-    std::cout << "The best route is: " << std::endl;
-    std::cout << array[0].name << std::endl;
+
+    std::cout << "Route Array: " << std::endl;
     std::cout << "" << std::endl;
+    for (int i=0; i<num_waypoints+1; i++){
+        std::cout << (route_array[i].identifier) << "," << std::endl;
+    }
+
+//    double distance_a_b = distance(A.altitude, C.altitude, A.lat, C.lat, A.lon, C.lon);
+//    double distance_a_c = distance(A.altitude, C.altitude, A.lat, C.lat, A.lon, C.lon);
+//    double distance_b_c = distance(B.altitude, C.altitude, B.lat, C.lat, B.lon, C.lon);
+//    double distance_takeoff_a = distance(altitude_absolute_takeoff, altitude_A, lat_takeoff, lat_A, lon_takeoff, lon_A);
+//    double distance_takeoff_b = distance(altitude_absolute_takeoff, altitude_B, lat_takeoff, lat_B, lon_takeoff, lon_B);
+//    double distance_takeoff_c = distance(altitude_absolute_takeoff, altitude_C, lat_takeoff, lat_C, lon_takeoff, lon_C);
+
+//    std::cout << "Distance A to B is: " << distance_a_b << "m" << std::endl;
+//    std::cout << "Distance A to C is: " << distance_a_c << "m" << std::endl;
+//    std::cout << "Distance B to C is: " << distance_b_c << "m" << std::endl;
+//    std::cout << "Distance Takeoff to A is: " << distance_takeoff_a << "m" << std::endl;
+//    std::cout << "Distance Takeoff to B is: " << distance_takeoff_b << "m" << std::endl;
+//    std::cout << "Distance Takeoff to C is: " << distance_takeoff_c << "m" << std::endl;
+
+
+//    double route_abc = distance_takeoff_a + distance_a_b + distance_b_c + distance_takeoff_c;
+//    double route_acb = distance_takeoff_a + distance_a_c + distance_b_c + distance_takeoff_b;
+//    double route_bac = distance_takeoff_b + distance_a_b + distance_a_c + distance_takeoff_c;
+//    double route_bca = distance_takeoff_b + distance_b_c + distance_a_c + distance_takeoff_a;
+//    double route_cab = distance_takeoff_c + distance_a_c + distance_a_b + distance_takeoff_b;
+//    double route_cba = distance_takeoff_c + distance_b_c + distance_a_b + distance_takeoff_a;
+
+
+//    std::cout << "" << std::endl;
+//    std::cout << "Route distance calculations: " << std::endl;
+//    std::cout << "" << std::endl;
+
+//    std::cout << "Route ABC is: " << route_abc << "m" << std::endl;
+//    std::cout << "Route ACB is: " << route_acb << "m" << std::endl;
+//    std::cout << "Route BAC is: " << route_bac << "m" << std::endl;
+//    std::cout << "Route BCA is: " << route_bca << "m" << std::endl; //This is a repeat
+//    std::cout << "Route CAB is: " << route_cab << "m" << std::endl; //This is a repeat
+//    std::cout << "Route CBA is: " << route_cba << "m" << std::endl; //This is a repeat
+//    //const int SIZE = 6;
+
+//    std::cout << "" << std::endl;
+
+//    std::cout << "Sorted List:" << std::endl;
+//    std::cout << "" << std::endl;
+
+//    ROUTE ABC;
+//    ABC.identifier = 38;
+//    ABC.distance = route_abc;
+//    ABC.num_waypoints = 3;
+//    ABC.traj[0] = A;
+//    ABC.traj[1] = B;
+//    ABC.traj[2] = C;
+
+
+//    const int SIZE = 1;
+//    ROUTE array[SIZE];
+//    array[0].identifier = ABC.identifier;
+//    array[0].distance = ABC.distance;
+//    array[0].num_waypoints = ABC.num_waypoints;
+//    array[0].traj[0] = ABC.traj[0];
+//    array[0].traj[1] = ABC.traj[1];
+//    array[0].traj[2] = ABC.traj[2];
+
+
+
+//    sortArray(array, SIZE);
+
+
+//    for (int i = 0; i < SIZE; i++)
+//    {
+//        std::cout << array[i].identifier << std::endl;
+//    }
+
+
+//    std::cout << "" << std::endl;
+//    std::cout << "The best route is: " << std::endl;
+//    std::cout << array[0].identifier << std::endl;
+//    std::cout << "" << std::endl;
 
 //    double route_array [] = {route_abc, route_acb, route_bac, route_bca, route_cab, route_cba};
 //    std::sort(route_array, route_array + SIZE);
@@ -409,33 +527,19 @@ int main(int argc, char **argv)
 
     std::cout << "Creating and uploading mission" << std::endl;
 
+    for (int x = 1; x<num_waypoints+1; x++){
+        mission_items.push_back(make_mission_item(route_array[x].lat,
+                                                  route_array[x].lon,
+                                                  route_array[x].altitude,
+                                                  speed,
+                                                  false,
+                                                  20.0f,
+                                                  60.0f,
+                                                  MissionItem::CameraAction::NONE));
+    }
 
-    mission_items.push_back(make_mission_item(array[0].traj[0].lat,
-                                              array[0].traj[0].lon,
-                                              array[0].traj[0].altitude,
-                                              array[0].traj[0].speed,
-                                              false,
-                                              20.0f,
-                                              60.0f,
-                                              MissionItem::CameraAction::NONE));
 
-    mission_items.push_back(make_mission_item(array[0].traj[1].lat,
-                                              array[0].traj[1].lon,
-                                              array[0].traj[1].altitude,
-                                              array[0].traj[1].speed,
-                                              true,
-                                              0.0f,
-                                              -60.0f,
-                                              MissionItem::CameraAction::NONE));
 
-    mission_items.push_back(make_mission_item(array[0].traj[2].lat,
-                                              array[0].traj[2].lon,
-                                              array[0].traj[2].altitude,
-                                              array[0].traj[2].speed,
-                                              true,
-                                              -45.0f,
-                                              0.0f,
-                                              MissionItem::CameraAction::NONE));
 
 
     {
@@ -616,3 +720,4 @@ void sortArray(ROUTE array[], int size)
         }
     } while (swapped);
 }
+
