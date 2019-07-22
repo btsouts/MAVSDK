@@ -265,7 +265,7 @@ int main(int argc, char **argv)
 
 //    //Declare a list of waypoints to work with
 //    WAYPOINT waypoint_array[num_waypoints+1] = {TAKEOFF, A, B, C, D};
-    WAYPOINT waypoint_array[num_waypoints+1] = {TAKEOFF, A, B, C, D};
+    //WAYPOINT waypoint_array[num_waypoints+1] = {TAKEOFF, A, B, C, D};
 
     //Update takeoff position
     //lat_takeoff = telemetry->position().latitude_deg;

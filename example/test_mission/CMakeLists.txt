@@ -14,6 +14,7 @@ find_package(MAVSDK REQUIRED)
 
 add_executable(test_mission
     test_mission.cpp
+    input.cpp
 )
 
 target_link_libraries(test_mission
