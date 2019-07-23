@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.12)
 
-project(test_mission)
+project(distance_mission)
 
 find_package(Threads REQUIRED)
 
@@ -12,12 +12,12 @@ endif()
 
 find_package(MAVSDK REQUIRED)
 
-add_executable(test_mission
-    test_mission.cpp
+add_executable(distance_mission
+    distance_mission.cpp
     input.cpp
 )
 
-target_link_libraries(test_mission
+target_link_libraries(distance_mission
     MAVSDK::mavsdk_action
     MAVSDK::mavsdk_mission
     MAVSDK::mavsdk_telemetry

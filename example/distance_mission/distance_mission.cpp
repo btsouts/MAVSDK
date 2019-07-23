@@ -170,7 +170,7 @@ int main(int argc, char **argv)
 
     //Open the input.txt file that contains the waypoints
     std::ifstream infile;
-    infile.open ("/home/joestory/Downloads/MAVSDK/example/test_mission/input.txt");
+    infile.open ("/home/joestory/Downloads/MAVSDK/example/distance_mission/input.txt");
     if (infile.is_open())
         std::cout << "Opened input.txt" << std::endl;
     std::cout << "" << std::endl;
