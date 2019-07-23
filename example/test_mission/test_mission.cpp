@@ -23,14 +23,15 @@
 #include <future>
 #include <iostream>
 #include <memory>
-#include <cmath>
 
 #include <algorithm>
-#include <map>
 #include <string>
-#include <set>
-#include <functional>
 #include <fstream>
+#include <sstream>
+#include <new>
+
+#include <stdio.h>
+#include <stdlib.h>
 
 #define ERROR_CONSOLE_TEXT "\033[31m" // Turn text on console red
 #define TELEMETRY_CONSOLE_TEXT "\033[34m" // Turn text on console blue
@@ -41,29 +42,16 @@ using namespace std::placeholders; // for `_1`
 using namespace std::chrono; // for seconds(), milliseconds()
 using namespace std::this_thread; // for sleep_for()
 
-//typedef struct {
-//    int identifier;
-//    double lat;
-//    double lon;
-//    float altitude;
-//    float speed;
-//}WAYPOINT;
-
-//double lat_takeoff;
-//double lon_takeoff;
-//float altitude_absolute_takeoff;
-//const double earth_radius = 6371000; //metres;
-//const double pi = 3.1415926535897;
-
 //Cost function variables
-double cost = 0; //Should be double
+double cost = 0;
 int n=0;
-//const int num_waypoints = 4;
-//const int num_waypoints = set_num_waypoints();
-//WAYPOINT waypoint_array = set_waypoints();
-double cost_array[(num_waypoints+1)][(num_waypoints+1)]; //Should be double
+int numOfWaypoints;
 
-int completed[num_waypoints+1] = {0};
+//Initialise dynamic arrays
+WAYPOINT * route_array;
+WAYPOINT * waypoint_array;
+double ** cost_array;
+int * completed;
 
 // Handles Action's result
 inline void handle_action_err_exit(Action::Result result, const std::string &message);
@@ -91,66 +79,21 @@ void usage(std::string bin_name)
               << "For example, to connect to the simulator use URL: udp://:14540" << std::endl;
 }
 
-
-
-//typedef struct {
-//    int identifier;
-//    double lat;
-//    double lon;
-//    float altitude;
-//    float speed;
-//}WAYPOINT;
-
-WAYPOINT route_array[num_waypoints+1];
-
-
 //Finds the nearest neighbour that hasn't been visited
-int least(int p){
-    int i,np=999;
-    int min=999,kmin;
-
-    for (i=0;i<num_waypoints+1;i++){
-        if((cost_array[p][i]!=0)&&(completed[i]==0)){
-            if(cost_array[p][i]+cost_array[i][p] < min){
-                min = cost_array[i][0]+cost_array[p][i];
-                kmin=cost_array[p][i];
-                np=i;
-            }
-        }
-    }
-    if(min!=999){
-        cost+=kmin;
-    }
-    return np;
-}
+int least(int p, int num_waypoints);
 
 //Finds the minimum cost route using the nearest neighbour algorithm
-void mincost(int position, WAYPOINT array[num_waypoints+1]){
-    int nposition;
+void mincost(int position, WAYPOINT array[], int num_waypoints);
 
-    completed[position]=1;
-
-    std::cout << position+1 << "--->";
-
-    route_array[n] = array[position];
-    n++;
-
-    nposition = least(position);
-
-    if(nposition==999){
-        nposition=0;
-        std::cout << nposition+1;
-        cost+=cost_array[position][nposition];
-        return;
-    }
-    mincost(nposition, array);
-
-}
-
+void calc_cost(const int num_waypoints, WAYPOINT array[]);
 
 int main(int argc, char **argv)
 {
     Mavsdk dc;
+
+    std::cout.precision(8);
+    std::cout << "Enter the number of waypoints: ";
+    std::cin >> numOfWaypoints;
 
     {
         auto prom = std::make_shared<std::promise<void>>();
@@ -207,14 +150,77 @@ int main(int argc, char **argv)
 
     sleep_for(seconds(1));
 
+    //Declare all dynamic arrays
+    waypoint_array = new WAYPOINT [numOfWaypoints+2];
+    route_array = new WAYPOINT [numOfWaypoints+2];
+    cost_array = new double * [numOfWaypoints+2];
+    for (int i=0; i < numOfWaypoints+1; i++){
+        cost_array[i] = new double [numOfWaypoints+2];
+    }
+    completed = new int [numOfWaypoints+1];
+    for (int i=0; i<numOfWaypoints+1; i++){
+        completed[i]=0;
+    }
 
+    //Update takeoff position
+    //waypoint_array[0] = TAKEOFF;
+    waypoint_array[0].lat = telemetry->position().latitude_deg;
+    waypoint_array[0].lon = telemetry->position().longitude_deg;
+    waypoint_array[0].alt = telemetry->position().absolute_altitude_m;
+
+    //Open the input.txt file that contains the waypoints
+    std::ifstream infile;
+    infile.open ("/home/joestory/Downloads/MAVSDK/example/test_mission/input.txt");
+    if (infile.is_open())
+        std::cout << "Opened input.txt" << std::endl;
+    std::cout << "" << std::endl;
+
+    //Get the information from the input.txt file and append it to the waypoint_array
+    std::string line;
+    int i = 1;
+    while (std::getline(infile, line)) {
+        std::istringstream iss(line);
+        double lat, lon;
+        int id;
+        float alt;
+
+        if (!(iss >> id >> lat >> lon >> alt)) { break; }
+        waypoint_array[i].id = id;
+        waypoint_array[i].lat = lat;
+        waypoint_array[i].lon = lon;
+        waypoint_array[i].alt = alt;
+        i++;
+    }
+
+    //Set the last point as the home position
+    waypoint_array[numOfWaypoints+1]=waypoint_array[0];
+
+    //Print
+    for (int i=0; i<numOfWaypoints+1;i++) {
+        std::cout << "Waypoint " << waypoint_array[i].id << ": " << waypoint_array[i].lat << ", " << waypoint_array[i].lon << std::endl;
+    }
+    std::cout << "" << std::endl;
+
+    //Calculate the 2D distance array (spherical polar coordinates)
+    calc_cost(numOfWaypoints, waypoint_array);
+    std::cout << "" << std::endl;
 
     //Calculating mission plan
     std::vector<std::shared_ptr<MissionItem>> mission_items;
     std::cout << "Calculating best flight path:" << std::endl;
     std::cout << "" << std::endl;
+    mincost(0, waypoint_array, numOfWaypoints);
+    std::cout << "\n\nMinimum cost is " << cost << "m" << std::endl;
+    std::cout << "" << std::endl;
 
-    /*(double latitude_deg,
+    sleep_for(seconds(2));
+
+    //Upload the mission plan using the route_array that was created by the mincost function
+    std::cout << "Creating and uploading mission" << std::endl;
+
+    /* Mission item structure:
+
+    double latitude_deg,
     double longitude_deg,
     float relative_altitude_m,
     float speed_m_s,
@@ -223,103 +229,10 @@ int main(int argc, char **argv)
     float gimbal_yaw_deg,
     MissionItem::CameraAction camera_action)*/
 
-    //float speed = 5.0f;
-
-    //Declare a list of waypoints to work with
-
-
-//    //Takeoff Waypoint
-//    WAYPOINT TAKEOFF;
-//    TAKEOFF.identifier = 1;
-//    TAKEOFF.lat = lat_takeoff;
-//    TAKEOFF.lon = lon_takeoff;
-//    TAKEOFF.altitude = altitude_absolute_takeoff;
-
-//    //Mission Waypoint A
-//    WAYPOINT A;
-//    A.identifier = 2;
-//    A.lat = 47.3977759; //47.398241338125118
-//    A.lon = 8.5462028; //8.5455360114574432
-//    A.altitude = 10.0f;
-
-//    //Mission Waypoint B
-//    WAYPOINT B;
-//    B.identifier = 3;
-//    B.lat = 47.3980161; //47.398001890458097
-//    B.lon = 8.5453055; //8.5455576181411743
-//    B.altitude = 10.0f;
-
-//    //Mission Waypoint C
-//    WAYPOINT C;
-//    C.identifier = 4;
-//    C.lat = 47.3980003; //47.398058617228855
-//    C.lon = 8.5459517; //8.5454618036746979
-//    C.altitude = 10.0f;
-
-//    //Mission Waypoint D
-//    WAYPOINT D;
-//    D.identifier = 5;
-//    D.lat = 47.398008;
-//    D.lon = 8.545701;
-//    D.altitude = 10;
-
-//    //Declare a list of waypoints to work with
-//    WAYPOINT waypoint_array[num_waypoints+1] = {TAKEOFF, A, B, C, D};
-    WAYPOINT waypoint_array[num_waypoints+1] = {TAKEOFF, A, B, C, D};
-
-    //Update takeoff position
-    //lat_takeoff = telemetry->position().latitude_deg;
-    waypoint_array[0].lat = telemetry->position().latitude_deg;
-    waypoint_array[0].lon = telemetry->position().longitude_deg;
-    waypoint_array[0].altitude = telemetry->position().absolute_altitude_m;
-
-
-
-    //Calculate the 2D distance array (spherical polar coordinates)
-    for (int i = 0; i < num_waypoints+1; i++){
-        for (int t = 0; t < num_waypoints+1; t++){
-            cost_array[i][t] = distance(waypoint_array[i].altitude, waypoint_array[t].altitude, waypoint_array[i].lat, waypoint_array[t].lat, waypoint_array[i].lon, waypoint_array[t].lon);
-        }
-    }
-
-    //route_array[0] = TAKEOFF;
-    mincost(0, waypoint_array);
-
-    //List the final waypoint as the start
-    route_array[num_waypoints+1] = waypoint_array[0];
-
-    std::cout << "\n\nMinimum cost is " << cost << std::endl;
-    std::cout << "" << std::endl;
-
-    //Print the 2D distance array
-    std::cout << "2D Distance Array:" << std::endl;
-    std::cout << "" << std::endl;
-    for (int i = 0; i < num_waypoints+1; i++){
-        std::cout << "[";
-        for (int t = 0; t < num_waypoints+1; t++){
-            std::cout << cost_array[i][t] << ",  ";
-        }
-        std::cout << "]" << std::endl;
-    }
-
-    std::cout << "" << std::endl;
-
-    std::cout << "Route Array: " << std::endl;
-    std::cout << "" << std::endl;
-    for (int i=0; i<num_waypoints+1; i++){
-        std::cout << (route_array[i].identifier) << "," << std::endl;
-    }
-
-
-    sleep_for(seconds(2));
-
-    //Upload the mission plan using the route_array that was created by the mincost function
-    std::cout << "Creating and uploading mission" << std::endl;
-
-    for (int x = 1; x<num_waypoints+1; x++){
+    for (int x = 1; x<numOfWaypoints+1; x++){
         mission_items.push_back(make_mission_item(route_array[x].lat,
                                                   route_array[x].lon,
-                                                  route_array[x].altitude,
+                                                  route_array[x].alt,
                                                   route_array[x].speed,
                                                   false,
                                                   20.0f,
@@ -401,6 +314,8 @@ int main(int argc, char **argv)
     std::cout << "Disarmed, exiting." << std::endl;
 }
 
+
+
 std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
                                                double longitude_deg,
                                                float relative_altitude_m,
@@ -445,5 +360,66 @@ inline void handle_connection_err_exit(ConnectionResult result, const std::strin
         std::cerr << ERROR_CONSOLE_TEXT << message << connection_result_str(result)
                   << NORMAL_CONSOLE_TEXT << std::endl;
         exit(EXIT_FAILURE);
+    }
+}
+
+//Finds the nearest neighbour that hasn't been visited
+int least(int p, int num_waypoints){
+    int i,np=999;
+    int min=999,kmin;
+
+    for (i=0;i<num_waypoints+1;i++){
+        if((cost_array[p][i]!=0)&&(completed[i]==0)){
+            if(cost_array[p][i]+cost_array[i][p] < min){
+                min = cost_array[i][0]+cost_array[p][i];
+                kmin=cost_array[p][i];
+                np=i;
+            }
+        }
+    }
+    if(min!=999){
+        cost+=kmin;
+    }
+    return np;
+}
+
+//Finds a close to optimal route using the 'Greedy' method
+void mincost(int position, WAYPOINT array[], int num_waypoints){
+    int nposition;
+
+    completed[position]=1;
+
+    std::cout << position << "--->";
+
+    route_array[n] = array[position];
+    n++;
+
+    nposition = least(position, num_waypoints);
+
+    if(nposition==999){
+        nposition=0;
+        std::cout << nposition;
+        cost+=cost_array[position][nposition];
+        return;
+    }
+    mincost(nposition, array, num_waypoints);
+}
+
+//Calculates the 2D cost function array (distance, time, power, etc.)
+void calc_cost(int num_waypoints, WAYPOINT array[]){
+    for (int i = 0; i < num_waypoints+1; i++){
+        for (int t = 0; t < num_waypoints+1; t++){
+            cost_array[i][t] = distance(array[i].alt, array[t].alt, array[i].lat, array[t].lat, array[i].lon, array[t].lon);
+        }
+    }
+    //Print the 2D distance array
+    std::cout << "2D Distance Array:" << std::endl;
+    std::cout << "" << std::endl;
+    for (int i = 0; i < num_waypoints+1; i++){
+        std::cout << "[";
+        for (int t = 0; t < num_waypoints+1; t++){
+            std::cout << cost_array[i][t] << ",  ";
+        }
+        std::cout << "]" << std::endl;
     }
 }

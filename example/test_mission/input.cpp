@@ -17,65 +17,12 @@
 #include <mavsdk/plugins/action/action.h>
 #include <mavsdk/plugins/mission/mission.h>
 #include <mavsdk/plugins/telemetry/telemetry.h>
-//#include "input.h"
-
 #include <cmath>
-//extern const int num_waypoints;
-
-////Set the number of waypoints
-//int set_num_waypoints(){
-//    const int num_waypoints = 4;
-//    return num_waypoints;
-//}
-
-
-////Define the list of Waypoints
-//WAYPOINT set_waypoints(){
-
-//    //Takeoff Waypoint
-//    WAYPOINT TAKEOFF;
-//    TAKEOFF.identifier = 1;
-//    TAKEOFF.lat = 0;
-//    TAKEOFF.lon = 0;
-//    TAKEOFF.altitude = 0;
-
-//    //Mission Waypoint A
-//    WAYPOINT A;
-//    A.identifier = 2;
-//    A.lat = 47.3977759; //47.398241338125118
-//    A.lon = 8.5462028; //8.5455360114574432
-//    A.altitude = 10.0f;
-
-//    //Mission Waypoint B
-//    WAYPOINT B;
-//    B.identifier = 3;
-//    B.lat = 47.3980161; //47.398001890458097
-//    B.lon = 8.5453055; //8.5455576181411743
-//    B.altitude = 10.0f;
-
-//    //Mission Waypoint C
-//    WAYPOINT C;
-//    C.identifier = 4;
-//    C.lat = 47.3980003; //47.398058617228855
-//    C.lon = 8.5459517; //8.5454618036746979
-//    C.altitude = 10.0f;
-
-//    //Mission Waypoint D
-//    WAYPOINT D;
-//    D.identifier = 5;
-//    D.lat = 47.398008;
-//    D.lon = 8.545701;
-//    D.altitude = 10;
-
-//    WAYPOINT waypoint_array[num_waypoints+1] = {TAKEOFF, A, B, C, D};
-
-//    return waypoint_array[0];
-
-//}
 
 const double earth_radius = 6371000; //metres;
 const double pi = 3.1415926535897;
 
+//Calculate the distance between two waypoints in spherical polar coordinates (latitude, longitude, and altitude)
 double distance(double alt1, double alt2, double lat1, double lat2, double lon1, double lon2)
 {
     double lat1_rad = (lat1/180)*pi;
