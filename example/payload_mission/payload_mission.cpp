@@ -17,7 +17,7 @@
 #include <mavsdk/plugins/action/action.h>
 #include <mavsdk/plugins/mission/mission.h>
 #include <mavsdk/plugins/telemetry/telemetry.h>
-#include "input.h"
+#include "payload_mission.h"
 
 #include <functional>
 #include <future>
@@ -47,11 +47,18 @@ double cost = 0;
 int n=0;
 int numOfWaypoints;
 
-//Initialise dynamic arrays
-WAYPOINT * route_array;
-WAYPOINT * waypoint_array;
+//Declare dynamic arrays
+WAYPOINTS * route_array;
+WAYPOINTS * waypoint_array;
 double ** cost_array;
 int * completed;
+
+//Declare drone variables
+double drone_weight;
+double drone_energy;
+double drone_max_vel;
+double drone_min_vel; //Is this really necessary???
+
 
 // Handles Action's result
 inline void handle_action_err_exit(Action::Result result, const std::string &message);
@@ -83,9 +90,9 @@ void usage(std::string bin_name)
 int least(int p, int num_waypoints);
 
 //Finds the minimum cost route using the nearest neighbour algorithm
-void mincost(int position, WAYPOINT array[], int num_waypoints);
+void mincost(int position, WAYPOINTS array[], int num_waypoints);
 
-void calc_cost(const int num_waypoints, WAYPOINT array[]);
+void calc_cost(const int num_waypoints, WAYPOINTS array[]);
 
 int main(int argc, char **argv)
 {
@@ -152,7 +159,7 @@ int main(int argc, char **argv)
 
     //Open the input.txt file that contains the waypoints
     std::ifstream infile;
-    infile.open ("/home/joestory/Downloads/MAVSDK/example/time_mission/input.txt");
+    infile.open ("/home/joestory/Downloads/MAVSDK/example/payload_mission/input.txt");
     if (infile.is_open())
         std::cout << "Opened input.txt" << std::endl;
     std::cout << "" << std::endl;
@@ -161,24 +168,43 @@ int main(int argc, char **argv)
     std::string line;
     std::getline(infile, line);
     std::istringstream iss(line);
-    if (!(iss >> numOfWaypoints)) { std::cerr << "READ ERROR 1" << std::endl; return 1; }
+    if (!(iss >> numOfWaypoints >> drone_weight >> drone_energy >> drone_max_vel >> drone_min_vel)) { std::cerr << "READ ERROR 1" << std::endl; return 1; }
     std::cout << "Number of waypoints found: " << numOfWaypoints << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "Drone weight: " << drone_weight << std::endl;
+    std::cout << "Drone energy: " << drone_energy << std::endl;
+    std::cout << "Drone max vel: " << drone_max_vel << std::endl;
+    std::cout << "Drone min vel: " << drone_min_vel << std::endl;
+    std::cout << "" << std::endl;
 
     //Declare all dynamic arrays
-    waypoint_array = new WAYPOINT [numOfWaypoints+2];
-    route_array = new WAYPOINT [numOfWaypoints+2];
+    //waypoint_array = new WAYPOINT [numOfWaypoints+2];
+    waypoint_array = new WAYPOINTS [numOfWaypoints+2];
+    route_array = new WAYPOINTS [numOfWaypoints+2];
+
+    //Create the 2D dynamic cost array
     cost_array = new double * [numOfWaypoints+2];
     for (int i=0; i < numOfWaypoints+1; i++){
         cost_array[i] = new double [numOfWaypoints+2];
     }
+
+    //Create the dynamic "Completed" array and set all values to zero (No points visited)
     completed = new int [numOfWaypoints+1];
     for (int i=0; i<numOfWaypoints+1; i++){
         completed[i]=0;
     }
 
+//    target_array[0].id = 1;
+//    target_array[0].lat = 47.460154;
+//    target_array[1].id = 2;
+//    target_array[1].lat = 47.359876;
+
+//    std::cout << target_array[0].id << ", " << target_array[0].lat << ", " << target_array[1].id << ", " << target_array[1].lat << std::endl;
+
     //Update takeoff position
     //waypoint_array[0] = TAKEOFF;
     waypoint_array[0].id = 0;
+    waypoint_array[0].user = "Drone";
     waypoint_array[0].lat = telemetry->position().latitude_deg;
     waypoint_array[0].lon = telemetry->position().longitude_deg;
     waypoint_array[0].alt = telemetry->position().absolute_altitude_m;
@@ -188,31 +214,65 @@ int main(int argc, char **argv)
     int i = 1;
     while (std::getline(infile, line)) {
         std::istringstream iss(line);
-        double lat, lon;
         int id;
+        std::string user;
+        double lat, lon;
         float alt;
         float speed;
+        float deadline;
+        double payload;
 
-        if (!(iss >> id >> lat >> lon >> alt >> speed)) { std::cerr << "READ ERROR 2" << std::endl; return 1; }
+        //Check that the file has been read properly, if not then terminate the program
+        if (!(iss >> id >> user >> lat >> lon >> alt >> speed >> deadline >> payload)) {
+            std::cerr << "READ ERROR 2" << std::endl;
+            std::cerr << id << ", " << user << ", " << lat << ", " << lon << ", " << alt << ", " << speed << ", " << deadline << ", " << payload << std::endl;
+            return 1;
+        }
+
         waypoint_array[i].id = id;
+        waypoint_array[i].user = user;
         waypoint_array[i].lat = lat;
         waypoint_array[i].lon = lon;
         waypoint_array[i].alt = alt;
         waypoint_array[i].speed = speed;
+        waypoint_array[i].deadline = deadline;
+        waypoint_array[i].payload = payload;
         i++;
+
+//        if (!(iss >> username)) { std::cerr << "READ ERROR 2" << std::endl; return 1; }
+//        waypoint_array[i].id = id;
+//        waypoint_array[i].user = username;
+//        waypoint_array[i].lat = lat;
+//        waypoint_array[i].lon = lon;
+//        waypoint_array[i].alt = alt;
+//        waypoint_array[i].speed = speed;
+//        i++;
     }
 
     //Set the last point as the home position
     waypoint_array[numOfWaypoints+1]=waypoint_array[0];
 
+    //Set the starting payload
+    for (int i=1; i<numOfWaypoints+1; i++){
+        waypoint_array[0].payload += waypoint_array[i].payload;
+    }
+
+
     //Print
     for (int i=0; i<numOfWaypoints+1;i++) {
-        std::cout << "Waypoint " << waypoint_array[i].id << ": " << waypoint_array[i].lat << ", " << waypoint_array[i].lon << ", " << waypoint_array[i].speed << std::endl;
+        std::cout << "Waypoint " << waypoint_array[i].id << ": "
+                  << waypoint_array[i].user << ", "
+                  << waypoint_array[i].lat << ", "
+                  << waypoint_array[i].lon << ", "
+                  << waypoint_array[i].alt << ", "
+                  << waypoint_array[i].speed << ", "
+                  << waypoint_array[i].deadline << ", "
+                  << waypoint_array[i].payload << std::endl;
     }
     std::cout << "" << std::endl;
 
     //Calculate the 2D time array (spherical polar coordinates)
-    std::cout << "This program calculates the cost based on time" << std::endl;
+    std::cout << "This program minimises the number of missed deadlines" << std::endl;
     std::cout << "" << std::endl;
     calc_cost(numOfWaypoints, waypoint_array);
     std::cout << "" << std::endl;
@@ -416,7 +476,7 @@ int least(int p, int num_waypoints){
 }
 
 //Finds a close to optimal route using the 'Greedy' method
-void mincost(int position, WAYPOINT array[], int num_waypoints){
+void mincost(int position, WAYPOINTS array[], int num_waypoints){
     int nposition;
 
     completed[position]=1;
@@ -438,10 +498,11 @@ void mincost(int position, WAYPOINT array[], int num_waypoints){
 }
 
 //Calculates the 2D cost function array (distance, time, power, etc.)
-void calc_cost(int num_waypoints, WAYPOINT array[]){
+void calc_cost(int num_waypoints, WAYPOINTS array[]){
+    WAYPOINTS cost_object;
     for (int i = 0; i < num_waypoints+1; i++){
         for (int t = 0; t < num_waypoints+1; t++){
-            cost_array[i][t] = time(array[i].alt, array[t].alt, array[i].lat, array[t].lat, array[i].lon, array[t].lon, array[t].speed);
+            cost_array[i][t] = cost_object.time (array[i].alt, array[t].alt, array[i].lat, array[t].lat, array[i].lon, array[t].lon, array[t].speed);
         }
     }
     //Print the 2D Cost array
