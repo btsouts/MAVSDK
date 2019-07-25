@@ -194,13 +194,6 @@ int main(int argc, char **argv)
         completed[i]=0;
     }
 
-//    target_array[0].id = 1;
-//    target_array[0].lat = 47.460154;
-//    target_array[1].id = 2;
-//    target_array[1].lat = 47.359876;
-
-//    std::cout << target_array[0].id << ", " << target_array[0].lat << ", " << target_array[1].id << ", " << target_array[1].lat << std::endl;
-
     //Update takeoff position
     //waypoint_array[0] = TAKEOFF;
     waypoint_array[0].id = 0;
@@ -239,14 +232,6 @@ int main(int argc, char **argv)
         waypoint_array[i].payload = payload;
         i++;
 
-//        if (!(iss >> username)) { std::cerr << "READ ERROR 2" << std::endl; return 1; }
-//        waypoint_array[i].id = id;
-//        waypoint_array[i].user = username;
-//        waypoint_array[i].lat = lat;
-//        waypoint_array[i].lon = lon;
-//        waypoint_array[i].alt = alt;
-//        waypoint_array[i].speed = speed;
-//        i++;
     }
 
     //Set the last point as the home position
