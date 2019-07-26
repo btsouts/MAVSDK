@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cmath>
+#include <iostream>
 
 const double earth_radius = 6371000; //metres;
 const double pi = 3.1415926535897;
@@ -67,6 +68,37 @@ class DRONE{
 
 class TRAJECTORY{
     public:
+
+    double** calc_cost(int num_waypoints, WAYPOINTS array[]){
+        WAYPOINTS cost_object;
+        double ** cost2d;
+        cost2d = new double * [num_waypoints+2];
+
+        for (int i=0; i < num_waypoints+1; i++){
+            cost2d[i] = new double [num_waypoints+2];
+        }
+
+        for (int i = 0; i < num_waypoints+1; i++){
+            for (int t = 0; t < num_waypoints+1; t++){
+                cost2d[i][t] = cost_object.time(array[i].alt, array[t].alt, array[i].lat, array[t].lat, array[i].lon, array[t].lon, array[t].speed);
+            }
+        }
+
+        //Print the 2D Cost array
+        std::cout << "2D Cost Array:" << std::endl;
+        std::cout << "" << std::endl;
+        for (int i = 0; i < num_waypoints+1; i++){
+            std::cout << "[";
+            for (int t = 0; t < num_waypoints+1; t++){
+                std::cout << cost2d[i][t] << ",  ";
+            }
+            std::cout << "]" << std::endl;
+        }
+        std::cout << "" << std::endl;
+
+        return cost2d;
+    }
+
     //Finds the nearest neighbour that hasn't been visited
 //    int least(int p, int num_waypoints, double cost_array[], int completed[]){
 //        int i,np=99999;

@@ -83,13 +83,8 @@ void usage(std::string bin_name)
               << "For example, to connect to the simulator use URL: udp://:14540" << std::endl;
 }
 
-//Finds the nearest neighbour that hasn't been visited
-//int least(int p, int num_waypoints);
-
 //Finds the minimum cost route using the nearest neighbour algorithm
 void mincost(int position, WAYPOINTS array[], int num_waypoints);
-
-void calc_cost(const int num_waypoints, WAYPOINTS array[]);
 
 int main(int argc, char **argv)
 {
@@ -270,8 +265,9 @@ int main(int argc, char **argv)
     //Calculate the 2D time array (spherical polar coordinates)
     std::cout << "This program minimises the number of missed deadlines" << std::endl;
     std::cout << "" << std::endl;
-    calc_cost(numOfWaypoints, waypoint_array);
-    std::cout << "" << std::endl;
+    cost_array = trajectory.calc_cost(numOfWaypoints, waypoint_array);
+
+
 
     //Calculating mission plan
     std::vector<std::shared_ptr<MissionItem>> mission_items;
@@ -491,24 +487,4 @@ void mincost(int position, WAYPOINTS array[], int num_waypoints){
         return;
     }
     mincost(nposition, array, num_waypoints);
-}
-
-//Calculates the 2D cost function array (distance, time, power, etc.)
-void calc_cost(int num_waypoints, WAYPOINTS array[]){
-    WAYPOINTS cost_object;
-    for (int i = 0; i < num_waypoints+1; i++){
-        for (int t = 0; t < num_waypoints+1; t++){
-            cost_array[i][t] = cost_object.time (array[i].alt, array[t].alt, array[i].lat, array[t].lat, array[i].lon, array[t].lon, array[t].speed);
-        }
-    }
-    //Print the 2D Cost array
-    std::cout << "2D Cost Array:" << std::endl;
-    std::cout << "" << std::endl;
-    for (int i = 0; i < num_waypoints+1; i++){
-        std::cout << "[";
-        for (int t = 0; t < num_waypoints+1; t++){
-            std::cout << cost_array[i][t] << ",  ";
-        }
-        std::cout << "]" << std::endl;
-    }
 }
