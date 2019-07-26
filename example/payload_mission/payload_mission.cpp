@@ -161,19 +161,18 @@ int main(int argc, char **argv)
     std::string line;
     std::getline(infile, line);
     std::istringstream iss(line);
-    if (!(iss >> numOfWaypoints >> drone.mass >> drone.bat_capacity >> drone.max_velocity >> drone.min_velocity >> drone.efficiency)) { std::cerr << "READ ERROR 1" << std::endl; return 1; }
+    if (!(iss >> numOfWaypoints >> drone.mass >> drone.num_rotors >> drone.rotor_radius >> drone.bat_capacity >> drone.bat_voltage >> drone.max_velocity >> drone.min_velocity >> drone.efficiency)) { std::cerr << "READ ERROR 1" << std::endl; return 1; }
     std::cout << "Number of waypoints found: " << numOfWaypoints << std::endl;
     std::cout << "" << std::endl;
-    std::cout << "Drone Weight: " << drone.mass << "kg" << std::endl;
-    std::cout << "Drone Battery Capacity: " << drone.bat_capacity << "mAh" << std::endl;
+    std::cout << "Drone Mass: " << drone.mass << "kg" << std::endl;
+    std::cout << "Drone Number of Rotors: " << drone.num_rotors << std::endl;
+    std::cout << "Drone Rotor Radius: " << drone.rotor_radius << "m" << std::endl;
     std::cout << "Drone Max Velocity: " << drone.max_velocity << "m/s" << std::endl;
     std::cout << "Drone Min Velocity: " << drone.min_velocity << "m/s" << std::endl;
+    std::cout << "Drone Battery Capacity: " << drone.bat_capacity << "mAh" << std::endl;
+    std::cout << "Drone Battery Voltage: " << drone.bat_voltage << "V" << std::endl;
     std::cout << "Drone Efficiency: " << drone.efficiency << "%" << std::endl;
     std::cout << "" << std::endl;
-
-    drone.num_rotors = 4;
-    drone.rotor_radius = 0.12;
-    drone.voltage = 15.2;
 
     float max_flight_time = drone.calc_max_flight_time();
     std::cout << std::setprecision(3) << "Maximum flight time is " << max_flight_time << " minutes" << std::endl;;
@@ -317,7 +316,7 @@ int main(int argc, char **argv)
     //Return to home
     mission_items.push_back(make_mission_item(waypoint_array[0].lat,
                                               waypoint_array[0].lon,
-                                              waypoint_array[0].alt,
+                                              20.0f,
                                               waypoint_array[0].speed,
                                               false,
                                               20.0f,
@@ -478,7 +477,8 @@ void mincost(int position, WAYPOINTS array[], int num_waypoints){
     route_array[n] = array[position];
     n++;
 
-    nposition = least(position, num_waypoints);
+    //nposition = least(position, num_waypoints);
+    nposition = trajectory.least(position, num_waypoints, completed, cost_array, cost);
 
     if(nposition==99999){
         nposition=0;

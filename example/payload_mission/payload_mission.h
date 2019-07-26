@@ -53,14 +53,14 @@ class DRONE{
 
     //Battery and electrical properties
     float bat_capacity;
-    float voltage;
+    float bat_voltage;
     float efficiency;
 
     //Calculate an estimate of the maximum drone flight time in minutes
     float calc_max_flight_time(){
         float rotor_area = num_rotors * (pi * pow(rotor_radius, 2));
         float power = sqrt( (2*pow(mass,3)*pow(g,3)) / (rho*rotor_area) );
-        float energy = voltage * bat_capacity * pow(10,-3); //Battery energy in Wh
+        float energy = bat_voltage * bat_capacity * pow(10,-3); //Battery energy in Wh
         float max_flight_time = (energy/power) * 60; //Max flight time in minutes
         return max_flight_time;
     }
@@ -99,25 +99,27 @@ class TRAJECTORY{
         return cost2d;
     }
 
+    /*** This still needs work! Needs to return cost as well?  ***/
     //Finds the nearest neighbour that hasn't been visited
-//    int least(int p, int num_waypoints, double cost_array[], int completed[]){
-//        int i,np=99999;
-//        int min=99999,kmin;
+    int least(int p, int num_waypoints, int completed[], double ** cost_array, double cost){
+        int i,np=99999;
+        int min=99999,kmin;
 
-//        for (i=0;i<num_waypoints+1;i++){
-//            if((cost_array[p][i]!=0)&&(completed[i]==0)){
-//                if(cost_array[p][i]+cost_array[i][p] < min){
-//                    min = cost_array[i][0]+cost_array[p][i];
-//                    kmin=cost_array[p][i];
-//                    np=i;
-//                }
-//            }
-//        }
-//        if(min!=99999){
-//            cost+=kmin;
-//        }
-//        return np;
-//    }
+
+        for (i=0;i<num_waypoints+1;i++){
+            if((cost_array[p][i]!=0)&&(completed[i]==0)){
+                if(cost_array[p][i]+cost_array[i][p] < min){
+                    min = cost_array[i][0]+cost_array[p][i];
+                    kmin=cost_array[p][i];
+                    np=i;
+                }
+            }
+        }
+        if(min!=99999){
+            cost+=kmin;
+        }
+        return np;
+    }
 
     private:
 };
