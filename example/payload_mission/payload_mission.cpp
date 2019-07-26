@@ -29,6 +29,7 @@
 #include <fstream>
 #include <sstream>
 #include <new>
+#include <iomanip>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,22 +44,18 @@ using namespace std::chrono; // for seconds(), milliseconds()
 using namespace std::this_thread; // for sleep_for()
 
 //Cost function variables
-double cost = 0;
+float cost = 0;
 int n=0;
 int numOfWaypoints;
+WAYPOINTS waypoints;
+DRONE drone;
+TRAJECTORY trajectory;
 
 //Declare dynamic arrays
 WAYPOINTS * route_array;
 WAYPOINTS * waypoint_array;
 double ** cost_array;
 int * completed;
-
-//Declare drone variables
-double drone_weight;
-double drone_energy;
-double drone_max_vel;
-double drone_min_vel; //Is this really necessary???
-
 
 // Handles Action's result
 inline void handle_action_err_exit(Action::Result result, const std::string &message);
@@ -87,7 +84,7 @@ void usage(std::string bin_name)
 }
 
 //Finds the nearest neighbour that hasn't been visited
-int least(int p, int num_waypoints);
+//int least(int p, int num_waypoints);
 
 //Finds the minimum cost route using the nearest neighbour algorithm
 void mincost(int position, WAYPOINTS array[], int num_waypoints);
@@ -98,11 +95,9 @@ int main(int argc, char **argv)
 {
     Mavsdk dc;
 
-    std::cout.precision(8);
-//    std::cout << "Enter the number of waypoints: ";
-//    std::cin >> numOfWaypoints;
-
     {
+        /*** Attempt to connect to the drone ***/
+
         auto prom = std::make_shared<std::promise<void>>();
         auto future_result = prom->get_future();
 
@@ -154,8 +149,11 @@ int main(int argc, char **argv)
 
     std::cout << "System ready" << std::endl;
     std::cout << "" << std::endl;
-
     sleep_for(seconds(1));
+
+
+
+    /*** Gather the information needed to create a trajectory ***/
 
     //Open the input.txt file that contains the waypoints
     std::ifstream infile;
@@ -168,13 +166,22 @@ int main(int argc, char **argv)
     std::string line;
     std::getline(infile, line);
     std::istringstream iss(line);
-    if (!(iss >> numOfWaypoints >> drone_weight >> drone_energy >> drone_max_vel >> drone_min_vel)) { std::cerr << "READ ERROR 1" << std::endl; return 1; }
+    if (!(iss >> numOfWaypoints >> drone.mass >> drone.bat_capacity >> drone.max_velocity >> drone.min_velocity >> drone.efficiency)) { std::cerr << "READ ERROR 1" << std::endl; return 1; }
     std::cout << "Number of waypoints found: " << numOfWaypoints << std::endl;
     std::cout << "" << std::endl;
-    std::cout << "Drone weight: " << drone_weight << std::endl;
-    std::cout << "Drone energy: " << drone_energy << std::endl;
-    std::cout << "Drone max vel: " << drone_max_vel << std::endl;
-    std::cout << "Drone min vel: " << drone_min_vel << std::endl;
+    std::cout << "Drone Weight: " << drone.mass << "kg" << std::endl;
+    std::cout << "Drone Battery Capacity: " << drone.bat_capacity << "mAh" << std::endl;
+    std::cout << "Drone Max Velocity: " << drone.max_velocity << "m/s" << std::endl;
+    std::cout << "Drone Min Velocity: " << drone.min_velocity << "m/s" << std::endl;
+    std::cout << "Drone Efficiency: " << drone.efficiency << "%" << std::endl;
+    std::cout << "" << std::endl;
+
+    drone.num_rotors = 4;
+    drone.rotor_radius = 0.12;
+    drone.voltage = 15.2;
+
+    float max_flight_time = drone.calc_max_flight_time();
+    std::cout << std::setprecision(3) << "Maximum flight time is " << max_flight_time << " minutes" << std::endl;;
     std::cout << "" << std::endl;
 
     //Declare all dynamic arrays
@@ -213,7 +220,7 @@ int main(int argc, char **argv)
         float alt;
         float speed;
         float deadline;
-        double payload;
+        float payload;
 
         //Check that the file has been read properly, if not then terminate the program
         if (!(iss >> id >> user >> lat >> lon >> alt >> speed >> deadline >> payload)) {
@@ -231,7 +238,6 @@ int main(int argc, char **argv)
         waypoint_array[i].deadline = deadline;
         waypoint_array[i].payload = payload;
         i++;
-
     }
 
     //Set the last point as the home position
@@ -242,19 +248,24 @@ int main(int argc, char **argv)
         waypoint_array[0].payload += waypoint_array[i].payload;
     }
 
-
     //Print
     for (int i=0; i<numOfWaypoints+1;i++) {
         std::cout << "Waypoint " << waypoint_array[i].id << ": "
                   << waypoint_array[i].user << ", "
-                  << waypoint_array[i].lat << ", "
-                  << waypoint_array[i].lon << ", "
-                  << waypoint_array[i].alt << ", "
+                  << std::setprecision(8) << waypoint_array[i].lat << ", "
+                  << std::setprecision(8) << waypoint_array[i].lon << ", "
+                  << std::setprecision(2) << waypoint_array[i].alt << ", "
                   << waypoint_array[i].speed << ", "
                   << waypoint_array[i].deadline << ", "
                   << waypoint_array[i].payload << std::endl;
     }
     std::cout << "" << std::endl;
+
+    std::cout.precision(5);
+
+
+
+    /*** Attempt to calculate a minimum cost trajectory ***/
 
     //Calculate the 2D time array (spherical polar coordinates)
     std::cout << "This program minimises the number of missed deadlines" << std::endl;
@@ -268,12 +279,21 @@ int main(int argc, char **argv)
     std::cout << "" << std::endl;
     mincost(0, waypoint_array, numOfWaypoints);
     cost += 3*numOfWaypoints;
-    std::cout << "\n\nMinimum cost is " << cost << "s" << std::endl;
+    std::cout << "\n\nMinimum cost is " << cost << " seconds" << std::endl;
     std::cout << "" << std::endl;
+
+    if ((cost/60) >= max_flight_time){
+        std::cout << "ERROR: Maximum flight time has been exceeded!" << std::endl;
+        return 1;
+    }
 
     sleep_for(seconds(3));
 
-    //Upload the mission plan using the route_array that was created by the mincost function
+
+
+
+    /*** Upload the mission plan using the route_array that was created by the mincost function ***/
+
     std::cout << "Creating and uploading mission" << std::endl;
 
     /* Mission item structure:
@@ -356,15 +376,6 @@ int main(int argc, char **argv)
         handle_mission_err_exit(result, "Mission start failed: ");
     }
 
-    for (int i=0; i<20; i++){
-        double north, east, down;
-        north = telemetry->ground_speed_ned().velocity_north_m_s;
-        east = telemetry->ground_speed_ned().velocity_east_m_s;
-        down = telemetry->ground_speed_ned().velocity_down_m_s;
-        std::cout << "North Velocity: " << north << ", East Velocity: " << east << ", Downwards Velocity: " << down << std::endl;
-        sleep_for(seconds(2));
-    }
-
     while (!mission->mission_finished()) {
         sleep_for(seconds(1));
     }
@@ -442,8 +453,8 @@ inline void handle_connection_err_exit(ConnectionResult result, const std::strin
 
 //Finds the nearest neighbour that hasn't been visited
 int least(int p, int num_waypoints){
-    int i,np=999;
-    int min=999,kmin;
+    int i,np=99999;
+    int min=99999,kmin;
 
     for (i=0;i<num_waypoints+1;i++){
         if((cost_array[p][i]!=0)&&(completed[i]==0)){
@@ -454,7 +465,7 @@ int least(int p, int num_waypoints){
             }
         }
     }
-    if(min!=999){
+    if(min!=99999){
         cost+=kmin;
     }
     return np;
@@ -473,7 +484,7 @@ void mincost(int position, WAYPOINTS array[], int num_waypoints){
 
     nposition = least(position, num_waypoints);
 
-    if(nposition==999){
+    if(nposition==99999){
         nposition=0;
         std::cout << nposition;
         cost+=cost_array[position][nposition];

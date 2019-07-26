@@ -2,7 +2,7 @@ This program aims to take a list of waypoints, each with a specific deadline, an
 
 The input format in the input.txt file is:
 
-	- 1st Line: Number of Waypoints, Drone Weight, Drone Energy, Drone Maximum Velocity, Drone Minimum Velocity
+        - 1st Line: Number of Waypoints, Drone Weight, Drone Energy, Drone Maximum Velocity, Drone Minimum Velocity, Drone Efficiency
 
 	- All other lines: Waypoint ID, User, Latitude, Longitude, Altitude, Speed, Deadline, Payload
 

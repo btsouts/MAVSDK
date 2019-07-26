@@ -6,34 +6,88 @@
 
 const double earth_radius = 6371000; //metres;
 const double pi = 3.1415926535897;
+const float g = 9.81; //ms^-2
+const float rho = 1.225; //Density of air in kgm^-3
 
 class WAYPOINTS{
   public:
     int id;
     std::string user;
-    double lat;
-    double lon;
+    float lat;
+    float lon;
     float alt;
     float speed;
-    float deadline;
-    double payload;
+    int deadline;
+    int numOfWaypoints;
+    float payload;
+
+
+    /*** Waypoint trajectory functions ***/
 
     //Calculate the distance between two waypoints in spherical polar coordinates (latitude, longitude, and altitude)
-    double time(double alt1, double alt2, double lat1, double lat2, double lon1, double lon2, float speed)
+    float time(float alt1, float alt2, float lat1, float lat2, float lon1, float lon2, float speed)
     {
-        double lat1_rad = (lat1/180)*pi;
-        double lat2_rad = (lat2/180)*pi;
-        double lon1_rad = (lon1/180)*pi;
-        double lon2_rad = (lon2/180)*pi;
+        float lat1_rad = (lat1/180)*pi;
+        float lat2_rad = (lat2/180)*pi;
+        float lon1_rad = (lon1/180)*pi;
+        float lon2_rad = (lon2/180)*pi;
 
-        double x = sqrt(pow(earth_radius+alt1, 2)+pow(earth_radius+alt2, 2)-2*(earth_radius+alt1)*
+        float x = sqrt(pow(earth_radius+alt1, 2)+pow(earth_radius+alt2, 2)-2*(earth_radius+alt1)*
                         (earth_radius+alt2)*(sin(lat1_rad)*sin(lat2_rad)+cos(lat1_rad)*cos(lat2_rad)*cos(lon1_rad-lon2_rad)));
 
-        double time = (x)/(speed);
+        float time = (x)/(speed);
         return time;
+    }
+
+};
+
+class DRONE{
+  public:
+    //Physical drone properties
+    float mass;
+    int num_rotors;
+    float rotor_radius;
+    float max_velocity;
+    float min_velocity;
+
+    //Battery and electrical properties
+    float bat_capacity;
+    float voltage;
+    float efficiency;
+
+    //Calculate an estimate of the maximum drone flight time in minutes
+    float calc_max_flight_time(){
+        float rotor_area = num_rotors * (pi * pow(rotor_radius, 2));
+        float power = sqrt( (2*pow(mass,3)*pow(g,3)) / (rho*rotor_area) );
+        float energy = voltage * bat_capacity * pow(10,-3); //Battery energy in Wh
+        float max_flight_time = (energy/power) * 60; //Max flight time in minutes
+        return max_flight_time;
     }
 };
 
-double time(double alt1, double alt2, double lat1, double lat2, double lon1, double lon2, float speed);
+class TRAJECTORY{
+    public:
+    //Finds the nearest neighbour that hasn't been visited
+//    int least(int p, int num_waypoints, double cost_array[], int completed[]){
+//        int i,np=99999;
+//        int min=99999,kmin;
+
+//        for (i=0;i<num_waypoints+1;i++){
+//            if((cost_array[p][i]!=0)&&(completed[i]==0)){
+//                if(cost_array[p][i]+cost_array[i][p] < min){
+//                    min = cost_array[i][0]+cost_array[p][i];
+//                    kmin=cost_array[p][i];
+//                    np=i;
+//                }
+//            }
+//        }
+//        if(min!=99999){
+//            cost+=kmin;
+//        }
+//        return np;
+//    }
+
+    private:
+};
 
 #endif
