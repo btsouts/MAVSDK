@@ -4,6 +4,7 @@
 #include <string>
 #include <cmath>
 #include <iostream>
+#include <tuple>
 
 const double earth_radius = 6371000; //metres;
 const double pi = 3.1415926535897;
@@ -68,58 +69,86 @@ class DRONE{
 
 class TRAJECTORY{
     public:
+        float** calc_cost(int num_waypoints, WAYPOINTS array[]){
+            WAYPOINTS cost_object;
+            float ** cost2d;
+            cost2d = new float * [num_waypoints+2];
 
-    double** calc_cost(int num_waypoints, WAYPOINTS array[]){
-        WAYPOINTS cost_object;
-        double ** cost2d;
-        cost2d = new double * [num_waypoints+2];
-
-        for (int i=0; i < num_waypoints+1; i++){
-            cost2d[i] = new double [num_waypoints+2];
-        }
-
-        for (int i = 0; i < num_waypoints+1; i++){
-            for (int t = 0; t < num_waypoints+1; t++){
-                cost2d[i][t] = cost_object.time(array[i].alt, array[t].alt, array[i].lat, array[t].lat, array[i].lon, array[t].lon, array[t].speed);
+            for (int i=0; i < num_waypoints+1; i++){
+                cost2d[i] = new float [num_waypoints+2];
             }
-        }
 
-        //Print the 2D Cost array
-        std::cout << "2D Cost Array:" << std::endl;
-        std::cout << "" << std::endl;
-        for (int i = 0; i < num_waypoints+1; i++){
-            std::cout << "[";
-            for (int t = 0; t < num_waypoints+1; t++){
-                std::cout << cost2d[i][t] << ",  ";
-            }
-            std::cout << "]" << std::endl;
-        }
-        std::cout << "" << std::endl;
-
-        return cost2d;
-    }
-
-    /*** This still needs work! Needs to return cost as well?  ***/
-    //Finds the nearest neighbour that hasn't been visited
-    int least(int p, int num_waypoints, int completed[], double ** cost_array, double cost){
-        int i,np=99999;
-        int min=99999,kmin;
-
-
-        for (i=0;i<num_waypoints+1;i++){
-            if((cost_array[p][i]!=0)&&(completed[i]==0)){
-                if(cost_array[p][i]+cost_array[i][p] < min){
-                    min = cost_array[i][0]+cost_array[p][i];
-                    kmin=cost_array[p][i];
-                    np=i;
+            for (int i = 0; i < num_waypoints+1; i++){
+                for (int t = 0; t < num_waypoints+1; t++){
+                    cost2d[i][t] = cost_object.time(array[i].alt, array[t].alt, array[i].lat, array[t].lat, array[i].lon, array[t].lon, array[t].speed);
                 }
             }
+
+            //Print the 2D Cost array
+            std::cout << "2D Cost Array:" << std::endl;
+            std::cout << "" << std::endl;
+            for (int i = 0; i < num_waypoints+1; i++){
+                std::cout << "[";
+                for (int t = 0; t < num_waypoints+1; t++){
+                    std::cout << cost2d[i][t] << ",  ";
+                }
+                std::cout << "]" << std::endl;
+            }
+            std::cout << "" << std::endl;
+
+            return cost2d;
         }
-        if(min!=99999){
-            cost+=kmin;
+
+        //Finds the nearest neighbour that hasn't been visited
+        std::tuple<int, double, bool> least(int p, int num_waypoints, int completed[], float ** cost_array, float cost){
+            int i,np=0;
+            int min=99999,kmin;
+            bool is_final = true;
+
+
+            for (i=0;i<num_waypoints+1;i++){
+                if((cost_array[p][i]!=0)&&(completed[i]==0)){
+                    if(cost_array[p][i]+cost_array[i][p] < min){
+                        min = cost_array[i][0]+cost_array[p][i];
+                        kmin=cost_array[p][i];
+                        np=i;
+                        is_final = false;
+                    }
+                }
+            }
+            if(is_final != true){
+                cost+=kmin;
+            }
+            return {np, cost, is_final};
         }
-        return np;
-    }
+
+        //Finds a close to optimal route using the 'Greedy' method
+        float mincost(int position, WAYPOINTS array[], int num_waypoints, float cost, int completed[], WAYPOINTS route_array[], int n, float ** cost_array){
+            int nposition;
+            bool is_final = false;
+
+            completed[position]=1;
+
+            std::cout << position << "--->";
+
+            route_array[n] = array[position];
+            n++;
+
+            //nposition = least(position, num_waypoints);
+            std::tie(nposition, cost, is_final) = TRAJECTORY::least(position, num_waypoints, completed, cost_array, cost);
+
+            if(is_final == true){
+                nposition=0;
+                std::cout << nposition;
+                cost+=cost_array[position][nposition];
+                return cost;
+            }
+
+            return mincost(nposition, array, num_waypoints, cost, completed, route_array, n, cost_array);
+
+
+        }
+
 
     private:
 };

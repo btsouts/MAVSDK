@@ -30,6 +30,7 @@
 #include <sstream>
 #include <new>
 #include <iomanip>
+#include <tuple>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,7 +55,7 @@ TRAJECTORY trajectory;
 //Declare dynamic arrays
 WAYPOINTS * route_array;
 WAYPOINTS * waypoint_array;
-double ** cost_array;
+float ** cost_array;
 int * completed;
 
 // Handles Action's result
@@ -84,7 +85,7 @@ void usage(std::string bin_name)
 }
 
 //Finds the minimum cost route using the nearest neighbour algorithm
-void mincost(int position, WAYPOINTS array[], int num_waypoints);
+//void mincost(int position, WAYPOINTS array[], int num_waypoints);
 
 int main(int argc, char **argv)
 {
@@ -157,7 +158,7 @@ int main(int argc, char **argv)
         std::cout << "Opened input.txt" << std::endl;
     std::cout << "" << std::endl;
 
-    //Get the number of waypoints from the first line of the text file
+    //Get the number of waypoints and drone information from the first line of the text file
     std::string line;
     std::getline(infile, line);
     std::istringstream iss(line);
@@ -184,9 +185,9 @@ int main(int argc, char **argv)
     route_array = new WAYPOINTS [numOfWaypoints+2];
 
     //Create the 2D dynamic cost array
-    cost_array = new double * [numOfWaypoints+2];
+    cost_array = new float * [numOfWaypoints+2];
     for (int i=0; i < numOfWaypoints+1; i++){
-        cost_array[i] = new double [numOfWaypoints+2];
+        cost_array[i] = new float [numOfWaypoints+2];
     }
 
     //Create the dynamic "Completed" array and set all values to zero (No points visited)
@@ -198,7 +199,7 @@ int main(int argc, char **argv)
     //Update takeoff position
     //waypoint_array[0] = TAKEOFF;
     waypoint_array[0].id = 0;
-    waypoint_array[0].user = "Drone";
+    waypoint_array[0].user = "Takeoff";
     waypoint_array[0].lat = telemetry->position().latitude_deg;
     waypoint_array[0].lon = telemetry->position().longitude_deg;
     waypoint_array[0].alt = telemetry->position().absolute_altitude_m;
@@ -272,10 +273,19 @@ int main(int argc, char **argv)
     std::vector<std::shared_ptr<MissionItem>> mission_items;
     std::cout << "Calculating best flight path:" << std::endl;
     std::cout << "" << std::endl;
-    mincost(0, waypoint_array, numOfWaypoints);
+   //std::cout << cost << std::endl;
+    cost = trajectory.mincost(0, waypoint_array, numOfWaypoints, cost, completed, route_array, n, cost_array);
     cost += 3*numOfWaypoints;
     std::cout << "\n\nMinimum cost is " << cost << " seconds" << std::endl;
     std::cout << "" << std::endl;
+
+
+    for (int i=0; i<numOfWaypoints+1;i++) {
+        std::cout << "Waypoint " << std::setprecision(8) << route_array[i].id << ", "
+        << route_array[i].lat << std::endl;
+    }
+
+
 
     if ((cost/60) >= max_flight_time){
         std::cout << "ERROR: Maximum flight time has been exceeded!" << std::endl;
@@ -444,47 +454,4 @@ inline void handle_connection_err_exit(ConnectionResult result, const std::strin
                   << NORMAL_CONSOLE_TEXT << std::endl;
         exit(EXIT_FAILURE);
     }
-}
-
-//Finds the nearest neighbour that hasn't been visited
-int least(int p, int num_waypoints){
-    int i,np=99999;
-    int min=99999,kmin;
-
-    for (i=0;i<num_waypoints+1;i++){
-        if((cost_array[p][i]!=0)&&(completed[i]==0)){
-            if(cost_array[p][i]+cost_array[i][p] < min){
-                min = cost_array[i][0]+cost_array[p][i];
-                kmin=cost_array[p][i];
-                np=i;
-            }
-        }
-    }
-    if(min!=99999){
-        cost+=kmin;
-    }
-    return np;
-}
-
-//Finds a close to optimal route using the 'Greedy' method
-void mincost(int position, WAYPOINTS array[], int num_waypoints){
-    int nposition;
-
-    completed[position]=1;
-
-    std::cout << position << "--->";
-
-    route_array[n] = array[position];
-    n++;
-
-    //nposition = least(position, num_waypoints);
-    nposition = trajectory.least(position, num_waypoints, completed, cost_array, cost);
-
-    if(nposition==99999){
-        nposition=0;
-        std::cout << nposition;
-        cost+=cost_array[position][nposition];
-        return;
-    }
-    mincost(nposition, array, num_waypoints);
 }
