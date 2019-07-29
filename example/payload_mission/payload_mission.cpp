@@ -274,7 +274,7 @@ int main(int argc, char **argv)
     std::cout << "Calculating best flight path:" << std::endl;
     std::cout << "" << std::endl;
    //std::cout << cost << std::endl;
-    cost = trajectory.mincost(0, waypoint_array, numOfWaypoints, cost, completed, route_array, n, cost_array);
+    cost = trajectory.call_mincost(waypoint_array, numOfWaypoints, route_array, cost_array);
     cost += 3*numOfWaypoints;
     std::cout << "\n\nMinimum cost is " << cost << " seconds" << std::endl;
     std::cout << "" << std::endl;
@@ -292,7 +292,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    sleep_for(seconds(3));
+    sleep_for(seconds(5));
 
 
 

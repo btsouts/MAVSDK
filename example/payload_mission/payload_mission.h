@@ -69,6 +69,7 @@ class DRONE{
 
 class TRAJECTORY{
     public:
+        //Calculates a 2D cost array based on the cost function used
         float** calc_cost(int num_waypoints, WAYPOINTS array[]){
             WAYPOINTS cost_object;
             float ** cost2d;
@@ -99,16 +100,40 @@ class TRAJECTORY{
             return cost2d;
         }
 
+        //Sets up all the variables required for the mincost function, and returns the estimated minimum cost route
+        float call_mincost(WAYPOINTS array[], int num_waypoints, WAYPOINTS route_array[], float ** cost_array){
+            float cost = 0;
+            int n = 0;
+            int * completed;
+            completed = new int [num_waypoints+1];
+            for (int i=0; i<num_waypoints+1; i++){
+                completed[i]=0;
+            }
+
+            return TRAJECTORY::mincost(0, array, num_waypoints, cost, completed, route_array, cost_array, n);
+
+        }
+
+
+    private:
         //Finds the nearest neighbour that hasn't been visited
         std::tuple<int, double, bool> least(int p, int num_waypoints, int completed[], float ** cost_array, float cost){
             int i,np=0;
-            int min=99999,kmin;
+            int min=0,kmin;
             bool is_final = true;
-
 
             for (i=0;i<num_waypoints+1;i++){
                 if((cost_array[p][i]!=0)&&(completed[i]==0)){
-                    if(cost_array[p][i]+cost_array[i][p] < min){
+                    //For first iteration, pick any point
+                    if (min == 0){
+                        min = cost_array[i][0]+cost_array[p][i];
+                        kmin=cost_array[p][i];
+                        np=i;
+                        is_final = false;
+                    }
+
+                    //For other iterations, check to see if there is any better point
+                    else if(cost_array[p][i]+cost_array[i][p] < min){
                         min = cost_array[i][0]+cost_array[p][i];
                         kmin=cost_array[p][i];
                         np=i;
@@ -123,7 +148,7 @@ class TRAJECTORY{
         }
 
         //Finds a close to optimal route using the 'Greedy' method
-        float mincost(int position, WAYPOINTS array[], int num_waypoints, float cost, int completed[], WAYPOINTS route_array[], int n, float ** cost_array){
+        float mincost(int position, WAYPOINTS array[], int num_waypoints, float cost, int completed[], WAYPOINTS route_array[], float ** cost_array, int n){
             int nposition;
             bool is_final = false;
 
@@ -144,13 +169,11 @@ class TRAJECTORY{
                 return cost;
             }
 
-            return mincost(nposition, array, num_waypoints, cost, completed, route_array, n, cost_array);
+            return mincost(nposition, array, num_waypoints, cost, completed, route_array, cost_array, n);
 
 
         }
 
-
-    private:
 };
 
 #endif
