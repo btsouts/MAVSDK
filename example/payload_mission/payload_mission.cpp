@@ -56,7 +56,6 @@ TRAJECTORY trajectory;
 WAYPOINTS * route_array;
 WAYPOINTS * waypoint_array;
 float ** cost_array;
-int * completed;
 
 // Handles Action's result
 inline void handle_action_err_exit(Action::Result result, const std::string &message);
@@ -83,9 +82,6 @@ void usage(std::string bin_name)
               << " For Serial : serial:///path/to/serial/dev[:baudrate]" << std::endl
               << "For example, to connect to the simulator use URL: udp://:14540" << std::endl;
 }
-
-//Finds the minimum cost route using the nearest neighbour algorithm
-//void mincost(int position, WAYPOINTS array[], int num_waypoints);
 
 int main(int argc, char **argv)
 {
@@ -188,12 +184,6 @@ int main(int argc, char **argv)
     cost_array = new float * [numOfWaypoints+2];
     for (int i=0; i < numOfWaypoints+1; i++){
         cost_array[i] = new float [numOfWaypoints+2];
-    }
-
-    //Create the dynamic "Completed" array and set all values to zero (No points visited)
-    completed = new int [numOfWaypoints+1];
-    for (int i=0; i<numOfWaypoints+1; i++){
-        completed[i]=0;
     }
 
     //Update takeoff position

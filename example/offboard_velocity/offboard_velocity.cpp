@@ -181,9 +181,9 @@ bool offb_ctrl_attitude(std::shared_ptr<mavsdk::Offboard> offboard)
     offboard_error_exit(offboard_result, "Offboard start failed");
     offboard_log(offb_mode, "Offboard started");
 
-    offboard_log(offb_mode, "ROLL 30");
+    offboard_log(offb_mode, "ROLL 180");
     offboard->set_attitude({30.0f, 0.0f, 0.0f, 0.6f});
-    sleep_for(seconds(2)); // rolling
+    sleep_for(seconds(5)); // rolling
 
     offboard_log(offb_mode, "ROLL -30");
     offboard->set_attitude({-30.0f, 0.0f, 0.0f, 0.6f});
@@ -259,22 +259,61 @@ int main(int argc, char **argv)
     std::cout << "In Air..." << std::endl;
     sleep_for(seconds(5));
 
-    //  using attitude control
-    bool ret = offb_ctrl_attitude(offboard);
-    if (ret == false) {
-        return EXIT_FAILURE;
-    }
+//    //  using attitude control
+//    bool ret = offb_ctrl_attitude(offboard);
+//    if (ret == false) {
+//        return EXIT_FAILURE;
+//    }
 
-    //  using local NED co-ordinates
-    ret = offb_ctrl_ned(offboard);
-    if (ret == false) {
-        return EXIT_FAILURE;
-    }
+//    //  using local NED co-ordinates
+//    ret = offb_ctrl_ned(offboard);
+//    if (ret == false) {
+//        return EXIT_FAILURE;
+//    }
 
-    //  using body co-ordinates
-    ret = offb_ctrl_body(offboard);
-    if (ret == false) {
-        return EXIT_FAILURE;
+//    //  using body co-ordinates
+//    ret = offb_ctrl_body(offboard);
+//    if (ret == false) {
+//        return EXIT_FAILURE;
+//    }
+
+
+    const std::string offb_mode = "STARTING JOE MODE (THIS WILL NOT GO WELL!)";
+    // Send it once before starting offboard, otherwise it will be rejected.
+    offboard->set_velocity_ned({0.0f, 0.0f, 0.0f, 0.0f});
+
+    Offboard::Result offboard_result = offboard->start();
+    offboard_error_exit(offboard_result, "Offboard start failed");
+    offboard_log(offb_mode, "Offboard started");
+
+    offboard_log(offb_mode, "Go up 2 m/s, turn to face South");
+    offboard->set_velocity_ned({0.0f, 0.0f, -3.0f, 180.0f});
+    sleep_for(seconds(6));
+
+    // Send it once before starting offboard, otherwise it will be rejected.
+    //offboard->set_attitude({30.0f, 0.0f, 0.0f, 0.6f});
+
+    offboard_log(offb_mode, "DO A FLIP");
+    offboard->set_attitude({180.0f, 0.0f, 0.0f, 0.6f});
+    sleep_for(milliseconds(850)); // rolling
+    offboard->set_attitude({-0.1f, 10.0f, 50.0f, 0.6f});
+    sleep_for(milliseconds(800));
+    offboard->set_velocity_ned({0.0f, 0.0f, -4.0f, 0.0f});
+
+    sleep_for(seconds(3));
+
+    offboard_log(offb_mode, "CELEBRATE");
+
+    {
+        const float step_size = 0.1f;
+        const float one_cycle = 0.5f * (float)M_PI;
+        const unsigned steps = 25 * unsigned(one_cycle / step_size);
+
+        for (unsigned i = 0; i < steps; ++i) {
+            float vx = 5.0f * sinf(i * step_size);
+            offboard->set_velocity_ned({vx, 0.0f, 0.0f, 90.0f});
+            sleep_for(milliseconds(10));
+        }
     }
 
     const Action::Result land_result = action->land();

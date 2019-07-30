@@ -104,11 +104,7 @@ class TRAJECTORY{
         float call_mincost(WAYPOINTS array[], int num_waypoints, WAYPOINTS route_array[], float ** cost_array){
             float cost = 0;
             int n = 0;
-            int * completed;
-            completed = new int [num_waypoints+1];
-            for (int i=0; i<num_waypoints+1; i++){
-                completed[i]=0;
-            }
+            int completed[num_waypoints+1] = {0};
 
             return TRAJECTORY::mincost(0, array, num_waypoints, cost, completed, route_array, cost_array, n);
 
@@ -170,8 +166,6 @@ class TRAJECTORY{
             }
 
             return mincost(nposition, array, num_waypoints, cost, completed, route_array, cost_array, n);
-
-
         }
 
 };
