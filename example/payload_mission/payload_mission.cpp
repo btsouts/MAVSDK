@@ -302,6 +302,10 @@ int main(int argc, char **argv)
     float gimbal_yaw_deg,
     MissionItem::CameraAction camera_action)*/
 
+    //*** ADD IN A LOITER TIME: MissionItem::set_loiter_time(3) ***//
+
+
+
     for (int x = 1; x<numOfWaypoints+1; x++){
         mission_items.push_back(make_mission_item(route_array[x].lat,
                                                   route_array[x].lon,
