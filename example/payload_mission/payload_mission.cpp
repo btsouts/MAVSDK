@@ -68,6 +68,7 @@ static std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
                                                       double longitude_deg,
                                                       float relative_altitude_m,
                                                       float speed_m_s,
+                                                      float hold_s,
                                                       bool is_fly_through,
                                                       float gimbal_pitch_deg,
                                                       float gimbal_yaw_deg,
@@ -305,12 +306,12 @@ int main(int argc, char **argv)
     //*** ADD IN A LOITER TIME: MissionItem::set_loiter_time(3) ***//
 
 
-
     for (int x = 1; x<numOfWaypoints+1; x++){
         mission_items.push_back(make_mission_item(route_array[x].lat,
                                                   route_array[x].lon,
                                                   route_array[x].alt,
                                                   route_array[x].speed,
+                                                  3.0f,
                                                   false,
                                                   20.0f,
                                                   60.0f,
@@ -322,6 +323,7 @@ int main(int argc, char **argv)
                                               waypoint_array[0].lon,
                                               20.0f,
                                               waypoint_array[0].speed,
+                                              3.0f,
                                               false,
                                               20.0f,
                                               60.0f,
@@ -407,6 +409,7 @@ std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
                                                double longitude_deg,
                                                float relative_altitude_m,
                                                float speed_m_s,
+                                               float hold_s,
                                                bool is_fly_through,
                                                float gimbal_pitch_deg,
                                                float gimbal_yaw_deg,
@@ -416,6 +419,7 @@ std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
     new_item->set_position(latitude_deg, longitude_deg);
     new_item->set_relative_altitude(relative_altitude_m);
     new_item->set_speed(speed_m_s);
+    new_item->set_loiter_time(hold_s);
     new_item->set_fly_through(is_fly_through);
     new_item->set_gimbal_pitch_and_yaw(gimbal_pitch_deg, gimbal_yaw_deg);
     new_item->set_camera_action(camera_action);
