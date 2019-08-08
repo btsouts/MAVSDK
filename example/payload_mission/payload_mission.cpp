@@ -229,10 +229,7 @@ int main(int argc, char **argv)
     //Set the last point as the home position
     waypoint_array[numOfWaypoints+1]=waypoint_array[0];
 
-    //Set the starting payload
-    for (int i=1; i<numOfWaypoints+1; i++){
-        waypoint_array[0].payload += waypoint_array[i].payload;
-    }
+
 
     //Print
     for (int i=0; i<numOfWaypoints+1;i++) {
