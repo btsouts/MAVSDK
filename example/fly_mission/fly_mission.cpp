@@ -17,11 +17,14 @@
 #include <mavsdk/plugins/action/action.h>
 #include <mavsdk/plugins/mission/mission.h>
 #include <mavsdk/plugins/telemetry/telemetry.h>
+#include <system.h>
 
+#include <string>
 #include <functional>
 #include <future>
 #include <iostream>
 #include <memory>
+#include </home/joestory/Downloads/MAVSDK/src/plugins/mavlink_passthrough/include/plugins/mavlink_passthrough/mavlink_passthrough.h>
 
 #define ERROR_CONSOLE_TEXT "\033[31m" // Turn text on console red
 #define TELEMETRY_CONSOLE_TEXT "\033[34m" // Turn text on console blue
@@ -106,11 +109,45 @@ int main(int argc, char **argv)
     auto action = std::make_shared<Action>(system);
     auto mission = std::make_shared<Mission>(system);
     auto telemetry = std::make_shared<Telemetry>(system);
+    auto mavlink_passthrough = std::make_shared<MavlinkPassthrough>(system);
 
     while (!telemetry->health_all_ok()) {
         std::cout << "Waiting for system to be ready" << std::endl;
         sleep_for(seconds(1));
     }
+
+    mavlink_mission_item_t waypoint;
+    waypoint.command = 16;
+    waypoint.x = 47.344556;
+    waypoint.y = 8.45467;
+    waypoint.z = 10;
+    waypoint.frame = 0;
+    waypoint.target_system = 1;
+    waypoint.target_component = 0;
+    waypoint.seq = 0;
+    waypoint.autocontinue = 0;
+    waypoint.current = 2;
+    waypoint.param1 = 0;
+    waypoint.param2 = 0;
+    waypoint.param3 = 0;
+    waypoint.param4 = 0;
+    waypoint.mission_type = MAV_MISSION_TYPE_MISSION;
+
+    mavlink_message_t packet;
+    mavlink_msg_mission_item_encode(100, 1, &packet, &waypoint);
+
+    //Code from mavlink_udp.c
+//    mavlink_msg_command_int_pack(100, 1, &msg, 1, 0, MAV_FRAME_GLOBAL_RELATIVE_ALT, MAV_CMD_NAV_TAKEOFF, 2, 0, 0, 5, 0, 0, 47.398, 8.54583, 10);
+//    len = mavlink_msg_to_send_buffer(buf, &msg);
+//    bytes_sent = sendto(sock, buf, len, 0, (struct sockaddr*)&gcAddr, sizeof(struct sockaddr_in));
+
+    MavlinkPassthrough::Result result = mavlink_passthrough->send_message(packet);
+    std::string output;
+    output = mavlink_passthrough->result_str(result);
+
+    std::cout << "Result is: " << output << std::endl;
+
+    sleep_for(seconds(10));
 
     std::cout << "System ready" << std::endl;
     std::cout << "Creating and uploading mission" << std::endl;
@@ -188,6 +225,8 @@ int main(int argc, char **argv)
         }
         std::cout << "Mission uploaded." << std::endl;
     }
+
+    sleep_for(seconds(10));
 
     std::cout << "Arming..." << std::endl;
     const Action::Result arm_result = action->arm();

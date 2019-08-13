@@ -231,10 +231,7 @@ int main(int argc, char **argv)
     //Set the last point as the home position
     waypoint_array[numOfWaypoints+1]=waypoint_array[0];
 
-    //Set the starting payload
-    for (int i=1; i<numOfWaypoints+1; i++){
-        waypoint_array[0].payload += waypoint_array[i].payload;
-    }
+
 
     //Print
     for (int i=0; i<numOfWaypoints+1;i++) {
@@ -307,6 +304,18 @@ int main(int argc, char **argv)
 
     //*** ADD IN A LOITER TIME: MissionItem::set_loiter_time(3) ***//
 
+    //Send home information first
+    mission_items.push_back(make_mission_item(waypoint_array[0].lat,
+                                              waypoint_array[0].lon,
+                                              20.0f,
+                                              waypoint_array[0].speed,
+                                              3.0f,
+                                              false,
+                                              20.0f,
+                                              60.0f,
+                                              waypoint_array[0].payload,
+                                              waypoint_array[0].deadline,
+                                              MissionItem::CameraAction::NONE));
 
     for (int x = 1; x<numOfWaypoints+1; x++){
         mission_items.push_back(make_mission_item(route_array[x].lat,
@@ -322,18 +331,6 @@ int main(int argc, char **argv)
                                                   MissionItem::CameraAction::NONE));
     }
 
-    //Return to home
-    mission_items.push_back(make_mission_item(waypoint_array[0].lat,
-                                              waypoint_array[0].lon,
-                                              20.0f,
-                                              waypoint_array[0].speed,
-                                              3.0f,
-                                              false,
-                                              20.0f,
-                                              60.0f,
-                                              waypoint_array[0].payload,
-                                              waypoint_array[0].deadline,
-                                              MissionItem::CameraAction::NONE));
 
     {
         std::cout << "Uploading mission..." << std::endl;
@@ -352,6 +349,8 @@ int main(int argc, char **argv)
         }
         std::cout << "Mission uploaded." << std::endl;
     }
+
+    sleep_for(seconds(3));
 
     std::cout << "Arming..." << std::endl;
     const Action::Result arm_result = action->arm();
