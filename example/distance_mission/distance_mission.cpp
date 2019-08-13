@@ -64,10 +64,7 @@ static std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
                                                       double longitude_deg,
                                                       float relative_altitude_m,
                                                       float speed_m_s,
-                                                      bool is_fly_through,
-                                                      float gimbal_pitch_deg,
-                                                      float gimbal_yaw_deg,
-                                                      MissionItem::CameraAction camera_action);
+                                                      bool is_fly_through);
 
 void usage(std::string bin_name)
 {
@@ -234,10 +231,7 @@ int main(int argc, char **argv)
                                                   route_array[x].lon,
                                                   route_array[x].alt,
                                                   route_array[x].speed,
-                                                  false,
-                                                  20.0f,
-                                                  60.0f,
-                                                  MissionItem::CameraAction::NONE));
+                                                  false));
     }
 
     {
@@ -320,18 +314,13 @@ std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
                                                double longitude_deg,
                                                float relative_altitude_m,
                                                float speed_m_s,
-                                               bool is_fly_through,
-                                               float gimbal_pitch_deg,
-                                               float gimbal_yaw_deg,
-                                               MissionItem::CameraAction camera_action)
+                                               bool is_fly_through)
 {
     std::shared_ptr<MissionItem> new_item(new MissionItem());
     new_item->set_position(latitude_deg, longitude_deg);
     new_item->set_relative_altitude(relative_altitude_m);
     new_item->set_speed(speed_m_s);
     new_item->set_fly_through(is_fly_through);
-    new_item->set_gimbal_pitch_and_yaw(gimbal_pitch_deg, gimbal_yaw_deg);
-    new_item->set_camera_action(camera_action);
     return new_item;
 }
 
