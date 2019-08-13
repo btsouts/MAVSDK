@@ -20,6 +20,7 @@ target_link_libraries(fly_mission
     MAVSDK::mavsdk_action
     MAVSDK::mavsdk_mission
     MAVSDK::mavsdk_telemetry
+    MAVSDK::mavsdk_mavlink_passthrough
     MAVSDK::mavsdk
     ${CMAKE_THREAD_LIBS_INIT}
 )

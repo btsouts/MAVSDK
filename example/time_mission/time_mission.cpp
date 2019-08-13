@@ -179,6 +179,7 @@ int main(int argc, char **argv)
     //Update takeoff position
     //waypoint_array[0] = TAKEOFF;
     waypoint_array[0].id = 0;
+    //waypoint_array[0].lat = telemetry->position().latitude_deg;
     waypoint_array[0].lat = telemetry->position().latitude_deg;
     waypoint_array[0].lon = telemetry->position().longitude_deg;
     waypoint_array[0].alt = telemetry->position().absolute_altitude_m;
@@ -203,7 +204,7 @@ int main(int argc, char **argv)
     }
 
     //Set the last point as the home position
-    waypoint_array[numOfWaypoints+1]=waypoint_array[0];
+    //waypoint_array[numOfWaypoints+1]=waypoint_array[0];
 
     //Print
     for (int i=0; i<numOfWaypoints+1;i++) {
@@ -242,6 +243,16 @@ int main(int argc, char **argv)
     float gimbal_yaw_deg,
     MissionItem::CameraAction camera_action)*/
 
+    //Send home information first
+    mission_items.push_back(make_mission_item(waypoint_array[0].lat,
+                                              waypoint_array[0].lon,
+                                              waypoint_array[0].alt,
+                                              waypoint_array[0].speed,
+                                              false,
+                                              20.0f,
+                                              60.0f,
+                                              MissionItem::CameraAction::NONE));
+
     for (int x = 1; x<numOfWaypoints+1; x++){
         mission_items.push_back(make_mission_item(route_array[x].lat,
                                                   route_array[x].lon,
@@ -253,15 +264,6 @@ int main(int argc, char **argv)
                                                   MissionItem::CameraAction::NONE));
     }
 
-    //Return to home
-    mission_items.push_back(make_mission_item(waypoint_array[0].lat,
-                                              waypoint_array[0].lon,
-                                              waypoint_array[0].alt,
-                                              waypoint_array[0].speed,
-                                              false,
-                                              20.0f,
-                                              60.0f,
-                                              MissionItem::CameraAction::NONE));
 
     {
         std::cout << "Uploading mission..." << std::endl;
