@@ -70,11 +70,8 @@ static std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
                                                       float speed_m_s,
                                                       float hold_s,
                                                       bool is_fly_through,
-                                                      float gimbal_pitch_deg,
-                                                      float gimbal_yaw_deg,
                                                       float payloadWeight,
-                                                      float deadline,
-                                                      MissionItem::CameraAction camera_action);
+                                                      float deadline);
 
 void usage(std::string bin_name)
 {
@@ -311,11 +308,8 @@ int main(int argc, char **argv)
                                               waypoint_array[0].speed,
                                               3.0f,
                                               false,
-                                              20.0f,
-                                              60.0f,
                                               waypoint_array[0].payload,
-                                              waypoint_array[0].deadline,
-                                              MissionItem::CameraAction::NONE));
+                                              waypoint_array[0].deadline));
 
     for (int x = 1; x<numOfWaypoints+1; x++){
         mission_items.push_back(make_mission_item(route_array[x].lat,
@@ -324,11 +318,8 @@ int main(int argc, char **argv)
                                                   route_array[x].speed,
                                                   3.0f,
                                                   false,
-                                                  20.0f,
-                                                  60.0f,
                                                   route_array[x].payload,
-                                                  route_array[x].deadline,
-                                                  MissionItem::CameraAction::NONE));
+                                                  route_array[x].deadline));
     }
 
 
@@ -416,11 +407,8 @@ std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
                                                float speed_m_s,
                                                float hold_s,
                                                bool is_fly_through,
-                                               float gimbal_pitch_deg,
-                                               float gimbal_yaw_deg,
                                                float payloadWeight,
-                                               float deadline,
-                                               MissionItem::CameraAction camera_action)
+                                               float deadline)
 {
     std::shared_ptr<MissionItem> new_item(new MissionItem());
     new_item->set_position(latitude_deg, longitude_deg);
@@ -428,8 +416,6 @@ std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
     new_item->set_speed(speed_m_s);
     new_item->set_loiter_time(hold_s);
     new_item->set_fly_through(is_fly_through);
-    new_item->set_gimbal_pitch_and_yaw(gimbal_pitch_deg, gimbal_yaw_deg);
-    new_item->set_camera_action(camera_action);
 
     /* Additions for trajectory calculation */
     printf("Adding payloadWeight %f, deadline %f\n",(double) payloadWeight,(double) deadline);
