@@ -89,6 +89,24 @@ public:
     void set_loiter_time(float loiter_time_s);
 
     /**
+     * @brief Set paylod weight in XXX.
+     *
+     * This specifies ....
+     *
+     * @param payload_weight The weight in XXX.
+     */
+    void set_payload_weight(float payload_weight);
+
+    /**
+     * @brief Set waypoint deadline in XXX.
+     *
+     * This specifies ....
+     *
+     * @param waypoint_deadline The deadline in XXX.
+     */
+    void set_waypoint_deadline(float waypoint_deadline);
+
+    /**
      * @brief Possible camera actions at a mission item.
      * @sa to_str()
      */

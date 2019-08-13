@@ -72,6 +72,8 @@ static std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
                                                       bool is_fly_through,
                                                       float gimbal_pitch_deg,
                                                       float gimbal_yaw_deg,
+                                                      float payloadWeight,
+                                                      float deadline,
                                                       MissionItem::CameraAction camera_action);
 
 void usage(std::string bin_name)
@@ -150,7 +152,7 @@ int main(int argc, char **argv)
 
     //Open the input.txt file that contains the waypoints
     std::ifstream infile;
-    infile.open ("/home/joestory/Downloads/MAVSDK/example/payload_mission/input.txt");
+    infile.open ("../input.txt");
     if (infile.is_open())
         std::cout << "Opened input.txt" << std::endl;
     std::cout << "" << std::endl;
@@ -315,6 +317,8 @@ int main(int argc, char **argv)
                                                   false,
                                                   20.0f,
                                                   60.0f,
+                                                  route_array[x].payload,
+                                                  route_array[x].deadline,
                                                   MissionItem::CameraAction::NONE));
     }
 
@@ -327,6 +331,8 @@ int main(int argc, char **argv)
                                               false,
                                               20.0f,
                                               60.0f,
+                                              waypoint_array[0].payload,
+                                              waypoint_array[0].deadline,
                                               MissionItem::CameraAction::NONE));
 
     {
@@ -413,6 +419,8 @@ std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
                                                bool is_fly_through,
                                                float gimbal_pitch_deg,
                                                float gimbal_yaw_deg,
+                                               float payloadWeight,
+                                               float deadline,
                                                MissionItem::CameraAction camera_action)
 {
     std::shared_ptr<MissionItem> new_item(new MissionItem());
@@ -423,6 +431,11 @@ std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
     new_item->set_fly_through(is_fly_through);
     new_item->set_gimbal_pitch_and_yaw(gimbal_pitch_deg, gimbal_yaw_deg);
     new_item->set_camera_action(camera_action);
+
+    /* Additions for trajectory calculation */
+    printf("Adding payloadWeight %f, deadline %f\n",(double) payloadWeight,(double) deadline);
+    new_item->set_payload_weight(payloadWeight);
+    new_item->set_waypoint_deadline(deadline);
     return new_item;
 }
 

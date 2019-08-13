@@ -567,6 +567,9 @@ void MissionImpl::assemble_mavlink_messages()
                                               mission_item_impl.get_mavlink_z(),
                                               MAV_MISSION_TYPE_MISSION);
 
+            //printf("DEBUG cmd %d frame %d param3 %f param4 %f?\n",
+            //    mission_item_impl.get_mavlink_cmd(),mission_item_impl.get_mavlink_frame(),(double) mission_item_impl.get_mavlink_param3(),(double) mission_item_impl.get_mavlink_param4());
+
             last_position_valid = true; // because we checked is_position_finite
             last_x = mission_item_impl.get_mavlink_x();
             last_y = mission_item_impl.get_mavlink_y();

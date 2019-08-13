@@ -20,6 +20,10 @@ public:
     void set_camera_action(MissionItem::CameraAction action);
     void set_camera_photo_interval(double interval_s);
 
+    /* Addition for trajectory planning -> param3 is payload weight and param4 is deadline */
+    void set_mavlink_param3(float payloadWeight);
+    void set_mavlink_param4(float deadline);
+
     double get_latitude_deg() const { return _latitude_deg; }
     double get_longitude_deg() const { return _longitude_deg; }
     float get_relative_altitude_m() const { return _relative_altitude_m; }
@@ -37,8 +41,11 @@ public:
     uint8_t get_mavlink_autocontinue() const;
     float get_mavlink_param1() const;
     float get_mavlink_param2() const;
-    float get_mavlink_param3() const;
-    float get_mavlink_param4() const;
+    //float get_mavlink_param3() const;
+    //float get_mavlink_param4() const;
+    float get_mavlink_param3();
+    float get_mavlink_param4();
+
     int32_t get_mavlink_x() const;
     int32_t get_mavlink_y() const;
     float get_mavlink_z() const;
@@ -56,6 +63,9 @@ private:
     float _loiter_time_s = NAN;
     MissionItem::CameraAction _camera_action{MissionItem::CameraAction::NONE};
     double _camera_photo_interval_s = 1.0;
+
+    float _param3 = NAN;
+    float _param4 = NAN;
 };
 
 } // namespace mavsdk

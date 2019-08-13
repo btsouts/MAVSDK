@@ -59,6 +59,16 @@ void MissionItem::set_camera_photo_interval(double interval_s)
     _impl->set_camera_photo_interval(interval_s);
 }
 
+void MissionItem::set_payload_weight(float payload_weight)
+{
+     _impl->set_mavlink_param3(payload_weight);
+}
+
+void MissionItem::set_waypoint_deadline(float waypoint_deadline)
+{
+    _impl->set_mavlink_param4(waypoint_deadline);
+}
+
 double MissionItem::get_latitude_deg() const
 {
     return _impl->get_latitude_deg();

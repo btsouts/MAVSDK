@@ -60,6 +60,16 @@ void MissionItemImpl::set_camera_photo_interval(double interval_s)
     }
 }
 
+void MissionItemImpl::set_mavlink_param3(float payloadWeight)
+{
+    _param3 = payloadWeight;
+}
+    
+void MissionItemImpl::set_mavlink_param4(float deadline)
+{
+    _param4 = deadline;
+}
+
 MAV_FRAME MissionItemImpl::get_mavlink_frame() const
 {
     return MAV_FRAME_GLOBAL_RELATIVE_ALT_INT;
@@ -103,16 +113,20 @@ float MissionItemImpl::get_mavlink_param2() const
     return acceptance_radius_m;
 }
 
-float MissionItemImpl::get_mavlink_param3() const
+float MissionItemImpl::get_mavlink_param3() 
 {
-    return 0.0f;
+    return _param3;
+    //return 0.0f;
 }
 
-float MissionItemImpl::get_mavlink_param4() const
+float MissionItemImpl::get_mavlink_param4() 
 {
     // Just let the drone fly forward.
-    float yaw_angle_deg = NAN;
-    return yaw_angle_deg;
+    return _param4;
+    
+    /* FIXME set relevant parameter as NAN in PX4 */
+    //float yaw_angle_deg = NAN;
+    //return yaw_angle_deg;
 }
 
 int32_t MissionItemImpl::get_mavlink_x() const

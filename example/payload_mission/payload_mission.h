@@ -140,7 +140,7 @@ class TRAJECTORY{
             if(is_final != true){
                 cost+=kmin;
             }
-            return {np, cost, is_final};
+            return std::make_tuple(np, cost, is_final);
         }
 
         //Finds a close to optimal route using the 'Greedy' method
