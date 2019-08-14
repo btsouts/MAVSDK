@@ -70,8 +70,8 @@ static std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
                                                       float speed_m_s,
                                                       float hold_s,
                                                       bool is_fly_through,
-                                                      float payloadWeight,
-                                                      float deadline);
+                                                      float deadline,
+                                                      float payloadWeight);
 
 void usage(std::string bin_name)
 {
@@ -301,16 +301,6 @@ int main(int argc, char **argv)
 
     //*** ADD IN A LOITER TIME: MissionItem::set_loiter_time(3) ***//
 
-    //Send home information first
-    mission_items.push_back(make_mission_item(waypoint_array[0].lat,
-                                              waypoint_array[0].lon,
-                                              20.0f,
-                                              waypoint_array[0].speed,
-                                              3.0f,
-                                              false,
-                                              waypoint_array[0].payload,
-                                              waypoint_array[0].deadline));
-
     for (int x = 1; x<numOfWaypoints+1; x++){
         mission_items.push_back(make_mission_item(route_array[x].lat,
                                                   route_array[x].lon,
@@ -318,9 +308,19 @@ int main(int argc, char **argv)
                                                   route_array[x].speed,
                                                   3.0f,
                                                   false,
-                                                  route_array[x].payload,
-                                                  route_array[x].deadline));
+                                                  route_array[x].deadline,
+                                                  route_array[x].payload));
     }
+
+    //Send home information last
+    mission_items.push_back(make_mission_item(waypoint_array[0].lat,
+                                              waypoint_array[0].lon,
+                                              20.0f,
+                                              waypoint_array[0].speed,
+                                              3.0f,
+                                              false,
+                                              waypoint_array[0].deadline,
+                                              waypoint_array[0].payload));
 
 
     {
@@ -407,8 +407,8 @@ std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
                                                float speed_m_s,
                                                float hold_s,
                                                bool is_fly_through,
-                                               float payloadWeight,
-                                               float deadline)
+                                               float deadline,
+                                               float payloadWeight)
 {
     std::shared_ptr<MissionItem> new_item(new MissionItem());
     new_item->set_position(latitude_deg, longitude_deg);
@@ -419,8 +419,8 @@ std::shared_ptr<MissionItem> make_mission_item(double latitude_deg,
 
     /* Additions for trajectory calculation */
     printf("Adding payloadWeight %f, deadline %f\n",(double) payloadWeight,(double) deadline);
-    new_item->set_payload_weight(payloadWeight);
     new_item->set_waypoint_deadline(deadline);
+    new_item->set_payload_weight(payloadWeight);
     return new_item;
 }
 
