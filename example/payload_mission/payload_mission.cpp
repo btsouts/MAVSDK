@@ -40,6 +40,7 @@
 #define NORMAL_CONSOLE_TEXT "\033[0m" // Restore normal console colour
 
 using namespace mavsdk;
+using namespace std;
 using namespace std::placeholders; // for `_1`
 using namespace std::chrono; // for seconds(), milliseconds()
 using namespace std::this_thread; // for sleep_for()
@@ -85,13 +86,15 @@ void usage(std::string bin_name)
 
 int main(int argc, char **argv)
 {
-    Mavsdk dc;
+    Mavsdk dc;	
+	string inFileName;
 
     {
         /*** Attempt to connect to the drone ***/
 
         auto prom = std::make_shared<std::promise<void>>();
         auto future_result = prom->get_future();
+		
 
         std::cout << "Waiting to discover system..." << std::endl;
         dc.register_on_discover([prom](uint64_t uuid) {
@@ -102,15 +105,21 @@ int main(int argc, char **argv)
         std::string connection_url;
         ConnectionResult connection_result;
 
-        if (argc == 2) {
-            connection_url = argv[1];
+		if (argc == 3) {
+            inFileName = argv[2];
+
+			connection_url = argv[1];
+            connection_result = dc.add_any_connection(connection_url);
+		} else if (argc == 2) {
+			inFileName = "../input.txt";            
+			connection_url = argv[1];
             connection_result = dc.add_any_connection(connection_url);
         } else {
             usage(argv[0]);
             return 1;
         }
 
-        if (connection_result != ConnectionResult::SUCCESS) {
+		if (connection_result != ConnectionResult::SUCCESS) {
             std::cout << ERROR_CONSOLE_TEXT
                       << "Connection failed: " << connection_result_str(connection_result)
                       << NORMAL_CONSOLE_TEXT << std::endl;
@@ -149,11 +158,12 @@ int main(int argc, char **argv)
 
     //Open the input.txt file that contains the waypoints
     std::ifstream infile;
-    infile.open ("../input.txt");
-    if (infile.is_open())
-        std::cout << "Opened input.txt" << std::endl;
+    infile.open (inFileName);
+	
+	if (infile.is_open())
+        std::cout << "Opened " << inFileName << std::endl;
     std::cout << "" << std::endl;
-
+	
     //Get the number of waypoints and drone information from the first line of the text file
     std::string line;
     std::getline(infile, line);
