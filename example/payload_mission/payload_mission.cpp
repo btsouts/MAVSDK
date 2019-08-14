@@ -301,6 +301,16 @@ int main(int argc, char **argv)
 
     //*** ADD IN A LOITER TIME: MissionItem::set_loiter_time(3) ***//
 
+    //Send home information first
+    mission_items.push_back(make_mission_item(waypoint_array[0].lat,
+                                              waypoint_array[0].lon,
+                                              20.0f,
+                                              waypoint_array[0].speed,
+                                              3.0f,
+                                              false,
+                                              waypoint_array[0].deadline,
+                                              waypoint_array[0].payload));
+
     for (int x = 1; x<numOfWaypoints+1; x++){
         mission_items.push_back(make_mission_item(route_array[x].lat,
                                                   route_array[x].lon,
@@ -311,16 +321,6 @@ int main(int argc, char **argv)
                                                   route_array[x].deadline,
                                                   route_array[x].payload));
     }
-
-    //Send home information last
-    mission_items.push_back(make_mission_item(waypoint_array[0].lat,
-                                              waypoint_array[0].lon,
-                                              20.0f,
-                                              waypoint_array[0].speed,
-                                              3.0f,
-                                              false,
-                                              waypoint_array[0].deadline,
-                                              waypoint_array[0].payload));
 
 
     {
