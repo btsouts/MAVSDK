@@ -289,7 +289,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    sleep_for(seconds(5));
+    sleep_for(seconds(2));
 
 
 
@@ -353,10 +353,10 @@ int main(int argc, char **argv)
 
     sleep_for(seconds(3));
 
-    std::cout << "Arming..." << std::endl;
-    const Action::Result arm_result = action->arm();
-    handle_action_err_exit(arm_result, "Arm failed: ");
-    std::cout << "Armed." << std::endl;
+//    std::cout << "Arming..." << std::endl;
+//    const Action::Result arm_result = action->arm();
+//    handle_action_err_exit(arm_result, "Arm failed: ");
+//    std::cout << "Armed." << std::endl;
 
     std::atomic<bool> want_to_pause{false};
     // Before starting the mission, we want to be sure to subscribe to the mission progress.
@@ -370,18 +370,18 @@ int main(int argc, char **argv)
         }
     });
 
-    {
-        std::cout << "Starting mission." << std::endl;
-        auto prom = std::make_shared<std::promise<Mission::Result>>();
-        auto future_result = prom->get_future();
-        mission->start_mission_async([prom](Mission::Result result) {
-            prom->set_value(result);
-            std::cout << "Started mission." << std::endl;
-        });
+//    {
+//        std::cout << "Starting mission." << std::endl;
+//        auto prom = std::make_shared<std::promise<Mission::Result>>();
+//        auto future_result = prom->get_future();
+//        mission->start_mission_async([prom](Mission::Result result) {
+//            prom->set_value(result);
+//            std::cout << "Started mission." << std::endl;
+//        });
 
-        const Mission::Result result = future_result.get();
-        handle_mission_err_exit(result, "Mission start failed: ");
-    }
+//        const Mission::Result result = future_result.get();
+//        handle_mission_err_exit(result, "Mission start failed: ");
+//    }
 
     while (!mission->mission_finished()) {
         sleep_for(seconds(1));
