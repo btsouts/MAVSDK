@@ -316,22 +316,34 @@ int main(int argc, char **argv)
                                               waypoint_array[0].lon,
                                               20.0f,
                                               waypoint_array[0].speed,
-                                              3.0f,
+                                              0.0f,
                                               false,
                                               waypoint_array[0].deadline,
                                               waypoint_array[0].payload));
 
-    for (int x = 1; x<numOfWaypoints+1; x++){
-        mission_items.push_back(make_mission_item(route_array[x].lat,
-                                                  route_array[x].lon,
-                                                  route_array[x].alt,
-                                                  route_array[x].speed,
-                                                  3.0f,
-                                                  false,
-                                                  route_array[x].deadline,
-                                                  route_array[x].payload));
-    }
+    //Upload sorted waypoints
+//    for (int x = 1; x<numOfWaypoints+1; x++){
+//        mission_items.push_back(make_mission_item(route_array[x].lat,
+//                                                  route_array[x].lon,
+//                                                  route_array[x].alt,
+//                                                  route_array[x].speed,
+//                                                  0.0f,
+//                                                  false,
+//                                                  route_array[x].deadline,
+//                                                  route_array[x].payload));
+//    }
 
+    //Upload stock waypoints
+    for (int x = 1; x<numOfWaypoints+1; x++){
+        mission_items.push_back(make_mission_item(waypoint_array[x].lat,
+                                                  waypoint_array[x].lon,
+                                                  waypoint_array[x].alt,
+                                                  waypoint_array[x].speed,
+                                                  0.0f,
+                                                  false,
+                                                  waypoint_array[x].deadline,
+                                                  waypoint_array[x].payload));
+    }
 
     {
         std::cout << "Uploading mission..." << std::endl;
@@ -370,43 +382,14 @@ int main(int argc, char **argv)
         }
     });
 
-//    {
-//        std::cout << "Starting mission." << std::endl;
-//        auto prom = std::make_shared<std::promise<Mission::Result>>();
-//        auto future_result = prom->get_future();
-//        mission->start_mission_async([prom](Mission::Result result) {
-//            prom->set_value(result);
-//            std::cout << "Started mission." << std::endl;
-//        });
-
-//        const Mission::Result result = future_result.get();
-//        handle_mission_err_exit(result, "Mission start failed: ");
-//    }
-
-    while (!mission->mission_finished()) {
-        sleep_for(seconds(1));
+    //Wait until the drone is armed
+    while (!telemetry->armed()){
+        sleep_for(seconds(3));
     }
-
-    {
-        // We are done, and can do RTL to go home.
-        std::cout << "Commanding RTL..." << std::endl;
-        const Action::Result result = action->return_to_launch();
-        if (result != Action::Result::SUCCESS) {
-            std::cout << "Failed to command RTL (" << Action::result_str(result) << ")"
-                      << std::endl;
-        } else {
-            std::cout << "Commanded RTL." << std::endl;
-        }
-    }
-
-    // We need to wait a bit, otherwise the armed state might not be correct yet.
-    sleep_for(seconds(2));
-
+    // Wait until we're done.
     while (telemetry->armed()) {
-        // Wait until we're done.
-        sleep_for(seconds(1));
+        sleep_for(seconds(3));
     }
-    std::cout << "Disarmed, exiting." << std::endl;
 }
 
 
