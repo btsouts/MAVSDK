@@ -2,7 +2,7 @@
 
 @authors: Joseph Story, Vasileious Tsoutsouras
 
-This script and all generated paths is property of the Physical Computation Laboratory, Cambridge, and it is intended solely for use by the Physical Computation Laboratory.
+This script and all generated paths are property of the Physical Computation Laboratory, Cambridge, and it is intended solely for use by the Physical Computation Laboratory.
 If you would like to request permission to use this intellectual property, please contact vt298@eng.cam.ac.uk.
 
 File names are given by waypointsX_payload_distribution_YZ where X is the number of waypoints, Y is the path type, and Z is the iteration out of 3.
