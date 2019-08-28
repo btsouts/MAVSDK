@@ -1,4 +1,6 @@
-This program aims to take a list of waypoints, each with a specific deadline, and create a flight trajectory that minimises the number of missed deadlines. Drone and waypoint information is read from the input.txt file.
+# Payload Mission
+
+This program aims to take a list of waypoints from the path generator, and upload it to a drone running PX4. Drone and waypoint information is read from the input.txt file.
 
 The input format in the input.txt file is:
 
