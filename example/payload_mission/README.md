@@ -15,7 +15,5 @@ Running the program:
 
 	- To run the program using the simulator's UDP connection, use ./time_mission udp://:14540
 
-To install MAVSDK:
-
-	- Follow the instructions found at https://mavsdk.mavlink.io/develop/en/contributing/build.html
+To install MAVSDK, follow the instructions found at https://mavsdk.mavlink.io/develop/en/contributing/build.html
 	
