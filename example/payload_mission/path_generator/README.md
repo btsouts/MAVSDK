@@ -1,6 +1,6 @@
 # Path Generator
 
-@authors: Joseph Story, Vasileious Tsoutsouras
+@authors: Joseph Story, Vasileios Tsoutsouras
 
 This script and all generated paths are property of the Physical Computation Laboratory, Cambridge, and it is intended solely for use by the Physical Computation Laboratory.
 If you would like to request permission to use this intellectual property, please contact vt298@eng.cam.ac.uk.
@@ -8,23 +8,23 @@ If you would like to request permission to use this intellectual property, pleas
 File names are given by waypointsX_payload_distribution_YZ where X is the number of waypoints, Y is the path type, and Z is the iteration out of 3.
 
 Path Types:
- - Type A = Grid of x=0->480m, y=0->480m, with the depot at (0,0)
- - Type B = Grid of x=-480->480m, y=-480->480m, with the depot at (0,0)
- - Type C = The same as Type A but with the centre located on the CAPE Building, Cambridge
+	- Type A = Grid of x=0->480m, y=0->480m, with the depot at (0,0)
+	- Type B = Grid of x=-480->480m, y=-480->480m, with the depot at (0,0)
+	- Type C = The same as Type A but with the centre located on the CAPE Building, Cambridge
 
 Distributions:
- - Uniform
- - Normal/Poisson?
+ 	- Uniform
+ 	- Normal/Poisson?
 
 Payloads:
- - Light = 0.1 to 0.2kg
- - Mid = 0.1 to 0.4kg
- - Heavy = 0.1 to 0.8kg
+ 	- Light = 0.1 to 0.2kg
+ 	- Mid = 0.1 to 0.4kg
+	- Heavy = 0.1 to 0.8kg
 
 
 
 
-Set the home location of the drone in Gazebo:
+Set the home location of the drone in Gazebo: (remember to change the home location in PX4)
  - export PX4_HOME_LAT=X.XXXX
  - export PX4_HOME_LON=X.XXXX
  - export PX4_HOME_ALT=X.XXXX

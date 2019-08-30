@@ -4,10 +4,10 @@ import math
 earth_radius = 6371000
 
 #Number of waypoints
-size = 20
+size = 50
 
-origin_lat = 52.210444
-origin_lon = 0.092640
+origin_lat = 47.3977413
+origin_lon = 8.5455941
 speed = 5.0
 delivery_time = 5.0
 accel_time = 3.0
