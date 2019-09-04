@@ -88,6 +88,7 @@ int main(int argc, char **argv)
 {
     Mavsdk dc;	
 	string inFileName;
+    float flightSpeed=3.0;
 
     {
         /*** Attempt to connect to the drone ***/
@@ -105,18 +106,30 @@ int main(int argc, char **argv)
         std::string connection_url;
         ConnectionResult connection_result;
 
-		if (argc == 3) {
+        if (argc == 4) {
+            flightSpeed = atof(argv[3]);
+            inFileName = argv[2];
+
+			connection_url = argv[1];
+            connection_result = dc.add_any_connection(connection_url);
+        } else if (argc == 3) {
+            printf("flightSpeed (arg 3) not set. Defaulting to 3.0\n");
+
             inFileName = argv[2];
 
 			connection_url = argv[1];
             connection_result = dc.add_any_connection(connection_url);
 		} else if (argc == 2) {
-			inFileName = "../input.txt";            
+            printf("flightSpeed (arg 3) not set. Defaulting to 3.0\n");
+
+            inFileName = "../input.txt";
+            printf("inFileName (arg 2) not set. Defaulting to ../input.txt\n");
+
 			connection_url = argv[1];
             connection_result = dc.add_any_connection(connection_url);
         } else {
             usage(argv[0]);
-            return 1;
+            return -1;
         }
 
 		if (connection_result != ConnectionResult::SUCCESS) {
@@ -151,8 +164,6 @@ int main(int argc, char **argv)
     std::cout << "System ready" << std::endl;
     std::cout << "" << std::endl;
     sleep_for(seconds(1));
-
-
 
     /*** Gather the information needed to create a trajectory ***/
 
@@ -196,15 +207,17 @@ int main(int argc, char **argv)
         cost_array[i] = new float [numOfWaypoints+2];
     }
 
-    //Update takeoff position
-    //waypoint_array[0] = TAKEOFF;
+    /*Update takeoff position -- with current position -- still set to zurich */
+    /* Takeoff coordinates are lat: 47.397751 lon: 8.545607 alt: -0.012000 */
     waypoint_array[0].id = 0;
     waypoint_array[0].user = "Takeoff";
     waypoint_array[0].lat = telemetry->position().latitude_deg;
     waypoint_array[0].lon = telemetry->position().longitude_deg;
     waypoint_array[0].alt = telemetry->position().absolute_altitude_m;
-    waypoint_array[0].speed = 5.0f;
-
+    waypoint_array[0].speed = flightSpeed;
+    
+    //printf("Takeoff coordinates are lat: %f lon: %f alt: %f\n",waypoint_array[0].lat,waypoint_array[0].lon,waypoint_array[0].alt);
+    
     //Get the information from the input.txt file and append it to the waypoint_array
     int i = 1;
     while (std::getline(infile, line)) {
@@ -229,7 +242,7 @@ int main(int argc, char **argv)
         waypoint_array[i].lat = lat;
         waypoint_array[i].lon = lon;
         waypoint_array[i].alt = alt;
-        waypoint_array[i].speed = speed;
+        waypoint_array[i].speed = flightSpeed;
         waypoint_array[i].deadline = deadline;
         waypoint_array[i].payload = payload;
         i++;
@@ -238,10 +251,8 @@ int main(int argc, char **argv)
     //Set the last point as the home position
     waypoint_array[numOfWaypoints+1]=waypoint_array[0];
 
-
-
     //Print
-    for (int i=0; i<numOfWaypoints+1;i++) {
+    for (int i=0; i<=numOfWaypoints+1;i++) {
         std::cout << "Waypoint " << waypoint_array[i].id << ": "
                   << waypoint_array[i].user << ", "
                   << std::setprecision(8) << waypoint_array[i].lat << ", "
@@ -255,45 +266,9 @@ int main(int argc, char **argv)
 
     std::cout.precision(5);
 
-
-
-    /*** Attempt to calculate a minimum cost trajectory ***/
-
-    //Calculate the 2D time array (spherical polar coordinates)
-    std::cout << "This program minimises the number of missed deadlines" << std::endl;
-    std::cout << "" << std::endl;
-    cost_array = trajectory.calc_cost(numOfWaypoints, waypoint_array);
-
-
-
     //Calculating mission plan
     std::vector<std::shared_ptr<MissionItem>> mission_items;
-    std::cout << "Calculating best flight path:" << std::endl;
-    std::cout << "" << std::endl;
-   //std::cout << cost << std::endl;
-    cost = trajectory.call_mincost(waypoint_array, numOfWaypoints, route_array, cost_array);
-    cost += 3*numOfWaypoints;
-    std::cout << "\n\nMinimum cost is " << cost << " seconds" << std::endl;
-    std::cout << "" << std::endl;
-
-
-    for (int i=0; i<numOfWaypoints+1;i++) {
-        std::cout << "Waypoint " << std::setprecision(8) << route_array[i].id << ", "
-        << route_array[i].lat << std::endl;
-    }
-
-
-
-    if ((cost/60) >= max_flight_time){
-        std::cout << "ERROR: Maximum flight time has been exceeded!" << std::endl;
-        return 1;
-    }
-
-    sleep_for(seconds(2));
-
-
-
-
+    
     /*** Upload the mission plan using the route_array that was created by the mincost function ***/
 
     std::cout << "Creating and uploading mission" << std::endl;
@@ -321,20 +296,8 @@ int main(int argc, char **argv)
                                               waypoint_array[0].deadline,
                                               waypoint_array[0].payload));
 
-    //Upload sorted waypoints
-//    for (int x = 1; x<numOfWaypoints+1; x++){
-//        mission_items.push_back(make_mission_item(route_array[x].lat,
-//                                                  route_array[x].lon,
-//                                                  route_array[x].alt,
-//                                                  route_array[x].speed,
-//                                                  0.0f,
-//                                                  false,
-//                                                  route_array[x].deadline,
-//                                                  route_array[x].payload));
-//    }
-
     //Upload stock waypoints
-    for (int x = 1; x<numOfWaypoints+1; x++){
+    for (int x = 1; x<=numOfWaypoints+1; x++){
         mission_items.push_back(make_mission_item(waypoint_array[x].lat,
                                                   waypoint_array[x].lon,
                                                   waypoint_array[x].alt,
@@ -365,10 +328,10 @@ int main(int argc, char **argv)
 
     sleep_for(seconds(3));
 
-//    std::cout << "Arming..." << std::endl;
-//    const Action::Result arm_result = action->arm();
-//    handle_action_err_exit(arm_result, "Arm failed: ");
-//    std::cout << "Armed." << std::endl;
+    std::cout << "Arming..." << std::endl;
+    const Action::Result arm_result = action->arm();
+    handle_action_err_exit(arm_result, "Arm failed: ");
+    std::cout << "Armed." << std::endl;
 
     std::atomic<bool> want_to_pause{false};
     // Before starting the mission, we want to be sure to subscribe to the mission progress.
@@ -382,13 +345,46 @@ int main(int argc, char **argv)
         }
     });
 
+    std::cout << "Starting mission." << std::endl;
+    auto prom = std::make_shared<std::promise<Mission::Result>>();
+    auto future_result = prom->get_future();
+    mission->start_mission_async([prom](Mission::Result result) {
+        prom->set_value(result);
+        std::cout << "Started mission." << std::endl;
+    });
+
+    const Mission::Result result = future_result.get();
+    handle_mission_err_exit(result, "Mission start failed: ");
+
+
     //Wait until the drone is armed
     while (!telemetry->armed()){
         sleep_for(seconds(3));
     }
     // Wait until we're done.
     while (telemetry->armed()) {
-        sleep_for(seconds(3));
+        printf("North: %f, East: %f, down: %f\n",
+            telemetry->ground_speed_ned().velocity_north_m_s, telemetry->ground_speed_ned().velocity_east_m_s, telemetry->ground_speed_ned().velocity_down_m_s);
+        sleep_for(seconds(2));
+
+        if (mission->mission_finished() == true) {
+            printf("Mission finished detected\n");
+
+            // Now just land here.
+            /*
+            std::cout << "Landing..." << std::endl;
+            const Action::Result land_result = action->land();
+            if (land_result != Action::Result::SUCCESS) {
+                std::cout << ERROR_CONSOLE_TEXT << "Land failed: " << Action::result_str(land_result)
+                        << NORMAL_CONSOLE_TEXT << std::endl;
+                return 1;
+            }
+            */
+            std::cout << "DisArming..." << std::endl;
+            const Action::Result arm_result = action->disarm();
+            handle_action_err_exit(arm_result, "DisArm failed: ");
+            std::cout << "DisArmed." << std::endl;
+        }
     }
 }
 
